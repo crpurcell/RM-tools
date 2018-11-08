@@ -73,7 +73,7 @@ def main():
 
     # Sanity checks
     if not os.path.exists(args.pickleFile[0]):
-        print "File does not exist: '%s'." % args.pickleFile[0]
+        print("File does not exist: '%s'." % args.pickleFile[0])
         sys.exit()
     dataDir, dummy = os.path.split(args.pickleFile[0])
 
@@ -201,7 +201,7 @@ def plot_triangle(pklFile, nBins=40, outFile="", figHeight=10):
                                         extent=[xMinData, xMaxData,
                                                 yMinData, yMaxData])
             except Exception:
-                print "Contour plotting failed!"
+                print("Contour plotting failed!")
 
         # Common formatting
         axLst[i].xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
@@ -215,8 +215,8 @@ def plot_triangle(pklFile, nBins=40, outFile="", figHeight=10):
                        wspace=0.15, hspace=0.05)
     #pl.savefig('triangle.eps')
     fig.show()
-    print "> Press <RETURN> to exit ...",
-    raw_input()
+    print("> Press <RETURN> to exit ...", end=' ')
+    input()
 
     
 #-----------------------------------------------------------------------------#

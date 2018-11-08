@@ -78,7 +78,7 @@ import os
 import sys
 import math as m
 import numpy as np
-import StringIO
+import io
 import traceback
 import astropy.io.fits as pf
 import matplotlib as mpl
@@ -88,13 +88,13 @@ from matplotlib.patches import Polygon
 from matplotlib.ticker import FuncFormatter
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
-import ttk
+import tkinter.ttk
 
-from util_plotFITS import plot_fits_map
-from util_misc import xfloat
-from util_misc import norm_cdf
-from util_misc import nanmedian
-from normalize import APLpyNormalize
+from .util_plotFITS import plot_fits_map
+from .util_misc import xfloat
+from .util_misc import norm_cdf
+from .util_misc import nanmedian
+from .normalize import APLpyNormalize
 
 # Alter the default linewidths etc.
 mpl.rcParams['lines.linewidth'] = 1.0
@@ -187,7 +187,7 @@ class CustomNavbar(NavigationToolbar2TkAgg):
         NavigationToolbar2TkAgg._init_toolbar(self)     
         
         # Add the legend toggle button
-        self.legBtn = ttk.Button(self, text="Hide Legend",
+        self.legBtn = tkinter.ttk.Button(self, text="Hide Legend",
                                  command=self.toggle_legend)
         self.legBtn.pack(side="left")
 
@@ -757,7 +757,7 @@ def plot_hist4_ax(ax, popLst, nBins=10, doXlog=False, doYlog=False, styIndx=0,
     # All valid data must have the same sign for log plots
     if doXlog:
         if not (xMinData<0) == (xMaxData<0):
-            print "\nErr: for log axis all data must have the same sign!"
+            print("\nErr: for log axis all data must have the same sign!")
             return
     sign = np.sign(popEnsemble)[0]
     
@@ -778,13 +778,13 @@ def plot_hist4_ax(ax, popLst, nBins=10, doXlog=False, doYlog=False, styIndx=0,
 
     # Print the binned values to the screen
     if verbose:
-        print "\n#BIN, COUNTS ..."
+        print("\n#BIN, COUNTS ...")
         binCentreArr = b[:-1]+np.diff(b)/2.0
         for i in range(len(binCentreArr)):
-            print binCentreArr[i],
+            print(binCentreArr[i], end=' ')
             for j in range(len(nLst)):
-                print nLst[j][i],
-            print
+                print(nLst[j][i], end=' ')
+            print()
     
     # Set the Y-axis limits
     nEnsemble = np.concatenate(nLst)
@@ -919,15 +919,15 @@ def plot_scatter4_ax(ax, popLst, doXlog=False, doYlog=False, zPower=1.0,
     # All valid data must have the same sign for log plots
     if doXlog:
         if not (xMinData<0) == (xMaxData<0):
-            print "\nErr: for log X-axis all data must have the same sign!"
+            print("\nErr: for log X-axis all data must have the same sign!")
             sys.exit()
     if doYlog:
         if not (yMinData<0) == (yMaxData<0):
-            print "\nErr: for log Y-axis all data must have the same sign!"
+            print("\nErr: for log Y-axis all data must have the same sign!")
             sys.exit()
     if zLst is not None and zPower!=1.0:
         if not (zMinData<0) == (zMaxData<0):
-            print "\nErr: for log Z-axis all data must have the same sign!"
+            print("\nErr: for log Z-axis all data must have the same sign!")
             sys.exit()
 
     # Set the plotting ranges (& colour limits)
@@ -1077,7 +1077,7 @@ def plotSpecIPQU(dataMan, indx, io="fig"):
     
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1107,7 +1107,7 @@ def plotSpecRMS(dataMan, indx, io="fig"):
     
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1156,7 +1156,7 @@ def plotPolang(dataMan, indx, io="fig"):
     
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1204,7 +1204,7 @@ def plotFracPol(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1255,7 +1255,7 @@ def plotFracQvsU(dataMan, indx, io="fig"):
     
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1378,7 +1378,7 @@ def plotPolsummary(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1456,7 +1456,7 @@ def plotPolresidual(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1517,7 +1517,7 @@ def plotRMSF(dataMan, indx, io="fig"):
     
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1552,7 +1552,7 @@ def plotDirtyFDF(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1592,7 +1592,7 @@ def plotCleanFDF(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1649,7 +1649,7 @@ def plotStampI(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1671,7 +1671,7 @@ def plotStampP(dataMan, indx, io="fig"):
 
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1698,9 +1698,9 @@ def plotSctHstQuery(dataMan, plotParm, io="fig"):
             popLst.append(resultArr)            
         except Exception:
             popLst.append(None)
-            print "\nWarn: failed to execute query:"
-            print "'%s'\n" % sql
-            print traceback.format_exc(), "\n"
+            print("\nWarn: failed to execute query:")
+            print("'%s'\n" % sql)
+            print(traceback.format_exc(), "\n")
     popLst.reverse()
     popLst = popLst[:4]
 
@@ -1794,7 +1794,7 @@ def plotSctHstQuery(dataMan, plotParm, io="fig"):
         
     # Write to the pipe
     if io=='string':
-        sio = StringIO.StringIO()
+        sio = io.StringIO()
         setattr(sio, "name", "foo.jpg")
         fig.savefig(sio, format='jpg' )    
         return sio
@@ -1906,7 +1906,7 @@ def plot_complexity_fig(xArr, qArr, dqArr, sigmaAddqArr, chiSqRedqArr,
     
     # Plot the ECDF versus a normal CDF
     nData = len(xArr)
-    ecdfArr = np.array(range(nData))/float(nData)
+    ecdfArr = np.array(list(range(nData)))/float(nData)
     qSrtArr = np.sort(qArr)
     uSrtArr = np.sort(uArr)
     ax3 = fig.add_subplot(235, sharex=ax2)

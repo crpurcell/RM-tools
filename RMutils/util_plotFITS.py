@@ -28,10 +28,10 @@ from matplotlib.ticker import FuncFormatter
 from matplotlib.patches import Ellipse
 from matplotlib.patches import Polygon
 
-from normalize import APLpyNormalize
-from util_FITS import strip_fits_dims
-from util_FITS import mkWCSDict
-from util_misc  import calc_stats
+from .normalize import APLpyNormalize
+from .util_FITS import strip_fits_dims
+from .util_FITS import mkWCSDict
+from .util_misc  import calc_stats
 
 
 #-----------------------------------------------------------------------------#

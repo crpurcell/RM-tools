@@ -93,7 +93,7 @@ if __name__ == "__main__":
     d = 3
     x = np.empty((N, d))
     x[0] = np.zeros(d)
-    for i in xrange(1, N):
+    for i in range(1, N):
         x[i] = x[i-1] * a + np.random.rand(d)
 
     strt = time.time()

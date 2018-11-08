@@ -82,7 +82,7 @@ def main():
     # Sanity checks
     for f in args.fitsFDF + args.fitsRMSF:
         if not os.path.exists(f):
-            print "File does not exist: '%s'." % f
+            print("File does not exist: '%s'." % f)
             sys.exit()
     dataDir, dummy = os.path.split(args.fitsFDF[0])
 
@@ -141,12 +141,12 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
         
     endTime = time.time()
     cputime = (endTime - startTime)
-    print "> RM-clean completed in %.2f seconds." % cputime
-    print "Saving the clean FDF and ancillary FITS files"
+    print("> RM-clean completed in %.2f seconds." % cputime)
+    print("Saving the clean FDF and ancillary FITS files")
     
     # Save the clean FDF
     fitsFileOut = outDir + "/" + prefixOut + "FDF_clean.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     hdu0 = pf.PrimaryHDU(cleanFDF.real.astype(dtFloat), head)
     hdu1 = pf.ImageHDU(cleanFDF.imag.astype(dtFloat), head)
     hdu2 = pf.ImageHDU(np.abs(cleanFDF).astype(dtFloat), head)
@@ -157,7 +157,7 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
 
     # Save the iteration count mask
     fitsFileOut = outDir + "/" + prefixOut + "CLEAN_nIter.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     head["BUNIT"] = "Iterations"
     hdu0 = pf.PrimaryHDU(iterCountArr.astype(dtFloat), head)
     hduLst = pf.HDUList([hdu0])

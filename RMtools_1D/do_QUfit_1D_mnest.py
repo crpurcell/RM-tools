@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import print_function
+
 #=============================================================================#
 #                                                                             #
 # NAME:     do_QUfit_1D_nest.py                                               #
@@ -441,7 +441,7 @@ def run_qufit(dataFile, modelNum, outDir="", polyOrd=3, nBits=32,
             cornerFig.show()
             print("> Press <RETURN> to exit ...", end="")
             sys.stdout.flush()
-            raw_input()
+            input()
 
         # Clean up
         plt.close(specFig)

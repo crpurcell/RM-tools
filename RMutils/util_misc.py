@@ -84,7 +84,7 @@ import sqlite3
 import csv
 import json
 
-from mpfit import mpfit
+from .mpfit import mpfit
 
 C = 2.99792458e8
 
@@ -206,7 +206,7 @@ def split_repeat_lst(inLst, nPre, nRepeat):
 
 
     preLst = inLst[:nPre]
-    repeatLst = zip(*[iter(inLst[nPre:])]*nRepeat)
+    repeatLst = list(zip(*[iter(inLst[nPre:])]*nRepeat))
     parmArr = np.array(repeatLst, dtype="f8").transpose()
 
     return preLst, parmArr
@@ -328,19 +328,19 @@ def create_frac_spectra(freqArr, IArr, QArr, UArr, dIArr, dQArr, dUArr,
 
         if verbose:
             print("\n")
-            print("-"*80)
+            print(("-"*80))
             print("Details of the polynomial fit to the spectrum:")
-            for key, val in fitDict.iteritems():
-                print(" %s = %s" % (key, val))
-            print("-"*80)
+            for key, val in fitDict.items():
+                print((" %s = %s" % (key, val)))
+            print(("-"*80))
             print("\n")
     except Exception:
         print("Err: Failed to fit polynomial to Stokes I spectrum.")
         if debug:
             print("\nTRACEBACK:")
-            print("-" * 80)
-            print(traceback.format_exc())
-            print("-" * 80)
+            print(("-" * 80))
+            print((traceback.format_exc()))
+            print(("-" * 80))
             print("\n")
         print("> Setting Stokes I spectrum to unity.\n")
         fitDict["p"] = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]

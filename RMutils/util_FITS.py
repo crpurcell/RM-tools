@@ -161,7 +161,7 @@ def strip_fits_dims(data=None, header=None, minDim=2, forceCheckDims=0):
         naxis = len(data.shape)
         extraDims = naxis - minDim
         if extraDims < 0:
-            print "Too few dimensions in data. "
+            print("Too few dimensions in data. ")
             sys.exit(1)
 
         # Slice the data to strip the extra dims
@@ -174,8 +174,8 @@ def strip_fits_dims(data=None, header=None, minDim=2, forceCheckDims=0):
         elif extraDims == 3:
             xydata = data[0][0][0].copy()
         else:
-            print "Data array contains %s axes" % naxis 
-            print "This script supports up to 5 axes only."
+            print("Data array contains %s axes" % naxis) 
+            print("This script supports up to 5 axes only.")
             sys.exit(1)
         del data
         
@@ -205,7 +205,7 @@ def strip_fits_dims(data=None, header=None, minDim=2, forceCheckDims=0):
 
         extraDims = naxis - minDim
         if extraDims < 0:
-            print "Too few dimensions in data. "
+            print("Too few dimensions in data. ")
             sys.exit(1)
 
         # Delete the entries
@@ -239,7 +239,7 @@ def strip_fits_dims(data=None, header=None, minDim=2, forceCheckDims=0):
     elif xydata is None and not header is None:
         return header
     else:
-        print "Both header and data are 'Nonetype'."
+        print("Both header and data are 'Nonetype'.")
         sys.exit(1)
 
 

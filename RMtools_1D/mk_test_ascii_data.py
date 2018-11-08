@@ -182,7 +182,7 @@ def main():
         try:
             flagFreqLst = args.flagFreqStr.split(",")
             flagFreqLst = [float(x) for x in flagFreqLst]
-            flagRanges_Hz = zip(*[iter(flagFreqLst)]*2)
+            flagRanges_Hz = list(zip(*[iter(flagFreqLst)]*2))
         except Exception:
             "Warn: Failed to parse frequency flagging string!"
 
@@ -210,23 +210,23 @@ def create_IQU_ascii_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz,
     freqArr_Hz = np.linspace(startFreq_Hz, endFreq_Hz, nChans)
     freqNoFlgArr_Hz = freqArr_Hz.copy()
     dFreq_Hz = (endFreq_Hz - startFreq_Hz)/ (nChans-1)
-    print "\nSampling frequencies %.2f - %.2f MHz by %.2f MHz." % \
-          (freqArr_Hz[0]/1e6, freqArr_Hz[-1]/1e6, dFreq_Hz/1e6)
+    print("\nSampling frequencies %.2f - %.2f MHz by %.2f MHz." % \
+          (freqArr_Hz[0]/1e6, freqArr_Hz[-1]/1e6, dFreq_Hz/1e6))
     if len(flagRanges_Hz)>0:
-        print "Flagging frequency ranges:"
-        print "> ", flagRanges_Hz
+        print("Flagging frequency ranges:")
+        print("> ", flagRanges_Hz)
     for i in range(len(freqArr_Hz)):
         for fRng in flagRanges_Hz:            
             if freqArr_Hz[i]>=fRng[0] and freqArr_Hz[i]<=fRng[1]:
                 freqArr_Hz[i]=np.nan
 
     # Create normalised noise array from a template or assume all ones.
-    print "Input RMS noise is %.3g mJy" % rmsNoise_mJy
+    print("Input RMS noise is %.3g mJy" % rmsNoise_mJy)
     if noiseTmpArr is None:
-        print "Assuming flat noise versus frequency curve."
+        print("Assuming flat noise versus frequency curve.")
         noiseArr = np.ones(freqArr_Hz.shape, dtype="f8")
     else:
-        print "Scaling noise by external template curve."
+        print("Scaling noise by external template curve.")
         xp = noiseTmpArr[0]
         yp = noiseTmpArr[1]
         mDict = calc_stats(yp)
@@ -235,31 +235,31 @@ def create_IQU_ascii_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz,
         
     # Check the catalogue file exists
     if not os.path.exists(inCatFile):
-        print "Err: File does not exist '%s'." % inCatFile
+        print("Err: File does not exist '%s'." % inCatFile)
         sys.exit()
     catInLst = csv_read_to_list(inCatFile, doFloat=True)
-    print "Found %d entries in the catalogue." % len(catInLst)
+    print("Found %d entries in the catalogue." % len(catInLst))
 
     # Set the frequency at which the flux has been defined
     if freq0_Hz is None:
         freq0_Hz = startFreq_Hz
-    print "Catalogue flux is defined at %.3f MHz" % (freq0_Hz/1e6)
+    print("Catalogue flux is defined at %.3f MHz" % (freq0_Hz/1e6))
     
     # Create the output directory path
     dataPath = dataPath.rstrip("/")
-    print "Creating test dataset in '%s/'" % dataPath
+    print("Creating test dataset in '%s/'" % dataPath)
     dirs = dataPath.split("/")
     for i in range(1, len(dirs)):
         dirStr = "/".join(dirs[:i])
         if not os.path.exists(dirStr):
             os.mkdir(dirStr)
     if os.path.exists(dataPath):
-        print "\n ",
-        print "*** WARNING ***" *5
-        print "  About to delete existing data directory!",
-        print "Previous results will be deleted.\n"
-        print "Press <RETURN> to continue ...",
-        raw_input()
+        print("\n ", end=' ')
+        print("*** WARNING ***" *5)
+        print("  About to delete existing data directory!", end=' ')
+        print("Previous results will be deleted.\n")
+        print("Press <RETURN> to continue ...", end=' ')
+        input()
         shutil.rmtree(dataPath, True)
     os.mkdir(dataPath)
 
@@ -324,7 +324,7 @@ def create_IQU_ascii_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz,
         # Save spectra to disk
         outFileName = "Source%d.dat" % (i+1)
         outFilePath = dataPath + "/" + outFileName
-        print "> Writing ASCII file '%s' ..." % outFileName,
+        print("> Writing ASCII file '%s' ..." % outFileName, end=' ')
         np.savetxt(outFilePath,
                    np.column_stack((freqArr_Hz,
                                     IArr_Jy,
@@ -333,7 +333,7 @@ def create_IQU_ascii_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz,
                                     dIArr_Jy,
                                     dQArr_Jy,
                                     dUArr_Jy)))
-        print "done."
+        print("done.")
         successCount += 1
 
     return successCount

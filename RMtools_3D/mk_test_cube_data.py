@@ -203,7 +203,7 @@ def main():
         try:
             flagFreqLst = args.flagFreqStr.split(",")
             flagFreqLst = [float(x) for x in flagFreqLst]
-            flagRanges_Hz = zip(*[iter(flagFreqLst)]*2)
+            flagRanges_Hz = list(zip(*[iter(flagFreqLst)]*2))
         except Exception:
             "Warn: Failed to parse frequency flagging string!"
 
@@ -235,11 +235,11 @@ def create_IQU_cube_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz, nChans,
     freqArr_Hz = np.linspace(startFreq_Hz, endFreq_Hz, nChans)
     freqNoFlgArr_Hz = freqArr_Hz.copy()
     dFreq_Hz = (endFreq_Hz - startFreq_Hz)/ (nChans-1)
-    print "\nSampling frequencies %.2f - %.2f MHz by %.2f MHz." % \
-          (freqArr_Hz[0]/1e6, freqArr_Hz[-1]/1e6, dFreq_Hz/1e6)
+    print("\nSampling frequencies %.2f - %.2f MHz by %.2f MHz." % \
+          (freqArr_Hz[0]/1e6, freqArr_Hz[-1]/1e6, dFreq_Hz/1e6))
     if len(flagRanges_Hz)>0:
-        print "Flagging frequency ranges:"
-        print "> ", flagRanges_Hz
+        print("Flagging frequency ranges:")
+        print("> ", flagRanges_Hz)
     for i in range(len(freqArr_Hz)):
         for fRng in flagRanges_Hz:            
             if freqArr_Hz[i]>=fRng[0] and freqArr_Hz[i]<=fRng[1]:
@@ -247,10 +247,10 @@ def create_IQU_cube_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz, nChans,
 
     # Create normalised noise array from a template or assume all ones.
     if noiseTmpArr is None:
-        print "Assuming flat noise versus frequency curve."
+        print("Assuming flat noise versus frequency curve.")
         noiseArr = np.ones(freqArr_Hz.shape, dtype="f4")
     else:
-        print "Scaling noise curve by external template."
+        print("Scaling noise curve by external template.")
         xp = noiseTmpArr[0]
         yp = noiseTmpArr[1]
         mDict = calc_stats(yp)
@@ -259,10 +259,10 @@ def create_IQU_cube_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz, nChans,
         
     # Check the catalogue file exists
     if not os.path.exists(inCatFile):
-        print "Err: File does not exist '%s'." % inCatFile
+        print("Err: File does not exist '%s'." % inCatFile)
         sys.exit()
     catInLst = csv_read_to_list(inCatFile, doFloat=True)
-    print "Found %d entries in the catalogue." % len(catInLst)
+    print("Found %d entries in the catalogue." % len(catInLst))
 
     # Create the output directory path
     dirs = dataPath.rstrip("/").split("/")
@@ -271,17 +271,17 @@ def create_IQU_cube_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz, nChans,
         if not os.path.exists(dirStr):
             os.mkdir(dirStr)
     if os.path.exists(dataPath):
-        print "\n ",
-        print "*** WARNING ***" *5
-        print "  About to delete existing data directory!",
-        print "Previous results will be deleted.\n"
-        print "Press <RETURN> to continue ...",
-        raw_input()
+        print("\n ", end=' ')
+        print("*** WARNING ***" *5)
+        print("  About to delete existing data directory!", end=' ')
+        print("Previous results will be deleted.\n")
+        print("Press <RETURN> to continue ...", end=' ')
+        input()
         shutil.rmtree(dataPath, True)
     os.mkdir(dataPath)
 
     # Create simple HDUs in memmory
-    print "Creating test data in memory."
+    print("Creating test data in memory.")
     hduI = create_simple_fits_hdu(shape=(1, nChans, nPixY, nPixX),
                                   freq_Hz=startFreq_Hz,
                                   dFreq_Hz=dFreq_Hz,
@@ -366,7 +366,7 @@ def create_IQU_cube_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz, nChans,
         successCount +=1
 
     # Loop through the frequency channels & insert the IQU planes
-    print "Looping through %d frequency channels:" % nChans
+    print("Looping through %d frequency channels:" % nChans)
     progress(40, 0.0)    
     for iChan in range(len(freqArr_Hz)):
         progress(40, (100.0 * (iChan + 1) / nChans))
@@ -417,21 +417,21 @@ def create_IQU_cube_data(dataPath, inCatFile, startFreq_Hz, endFreq_Hz, nChans,
         hduU.data[0, :, 20:60, 20:70] = np.nan
 
     # Write to the FITS files
-    print "Saving the FITS files to disk in directory '%s'" % dataPath
+    print("Saving the FITS files to disk in directory '%s'" % dataPath)
     sys.stdout.flush()
     fitsFileOut =  dataPath + "/StokesI.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     hduI.writeto(fitsFileOut, clobber=True)
     fitsFileOut =  dataPath + "/StokesQ.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     hduQ.writeto(fitsFileOut, clobber=True)
     fitsFileOut =  dataPath + "/StokesU.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     hduU.writeto(fitsFileOut, clobber=True)
 
     # Save a vector of frequency values
     freqFileOut =  dataPath + "/freqs_Hz.dat"
-    print "> %s" % freqFileOut
+    print("> %s" % freqFileOut)
     np.savetxt(freqFileOut,freqNoFlgArr_Hz)
     
     return successCount

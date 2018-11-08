@@ -88,7 +88,7 @@ def main():
     # Sanity checks
     for f in [args.fitsI[0], args.freqFile[0]]:
         if not os.path.exists(f):
-            print "File does not exist: '%s'." % f
+            print("File does not exist: '%s'." % f)
             sys.exit()
     dataDir, dummy = os.path.split(args.fitsI[0])
 
@@ -117,26 +117,26 @@ def make_model_I(fitsI, freqFile, polyOrd=3, cutoff=-1, prefixOut="",
     dtFloat = "float" + str(nBits)
     
     # Sanity check on header dimensions
-    print "Reading FITS cube header from '%s':" % fitsI
+    print("Reading FITS cube header from '%s':" % fitsI)
     headI = pf.getheader(fitsI, 0)
     nDim = headI["NAXIS"]
     if nDim < 3 or nDim > 4:
-        print "Err: only 3 or 4 dimensions supported: D = %d." % headQ["NAXIS"]
+        print("Err: only 3 or 4 dimensions supported: D = %d." % headQ["NAXIS"])
         sys.exit()
     nDim = headI["NAXIS"]
     nChan = headI["NAXIS3"]
     
     # Read the frequency vector
-    print "Reading frequency vector from '%s':" % freqFile
+    print("Reading frequency vector from '%s':" % freqFile)
     freqArr_Hz = np.loadtxt(freqFile, dtype=dtFloat)
     freqArr_GHz = freqArr_Hz/1e9
     if nChan!=len(freqArr_Hz):
-        print "Err: frequency vector and axis 3 of cube unequal length."
+        print("Err: frequency vector and axis 3 of cube unequal length.")
         sys.exit()
         
     # Measure the RMS spectrum using 2 passes of MAD on each plane
     # Determine which pixels have emission above the cutoff
-    print "Measuring the RMS noise and creating an emission mask"
+    print("Measuring the RMS noise and creating an emission mask")
     rmsArr_Jy = np.zeros_like(freqArr_Hz)
     mskSrc = np.zeros((headI["NAXIS2"], headI["NAXIS1"]), dtype=dtFloat)
     mskSky = np.zeros((headI["NAXIS2"], headI["NAXIS1"]), dtype=dtFloat)
@@ -174,25 +174,25 @@ def make_model_I(fitsI, freqFile, polyOrd=3, cutoff=-1, prefixOut="",
         del HDULst
 
     # Save the noise spectrum
-    print "Saving the RMS noise spectrum in an ASCII file:"
+    print("Saving the RMS noise spectrum in an ASCII file:")
     outFile = outDir + "/"  + prefixOut + "Inoise.dat"
-    print "> %s" % outFile
+    print("> %s" % outFile)
     np.savetxt(outFile, rmsArr_Jy)
         
     # Save FITS files containing sky and source masks
-    print "Saving sky and source mask images:"
+    print("Saving sky and source mask images:")
     mskArr = np.where(mskSky>0, 1.0, np.nan)
     headMsk = strip_fits_dims(header=headI, minDim=2)
     headMsk["DATAMAX"] = 1
     headMsk["DATAMIN"] = 0
     del headMsk["BUNIT"]
     fitsFileOut = outDir + "/"  + prefixOut + "IskyMask.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, mskArr, headMsk, output_verify="fix",
                clobber=True)
     mskArr = np.where(mskSrc>0, 1.0, np.nan)
     fitsFileOut = outDir + "/"  + prefixOut + "IsrcMask.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, mskArr, headMsk, output_verify="fix",
                clobber=True)
         
@@ -200,8 +200,8 @@ def make_model_I(fitsI, freqFile, polyOrd=3, cutoff=-1, prefixOut="",
     # http://docs.astropy.org/en/stable/io/fits/appendix/faq.html
     #  #how-can-i-create-a-very-large-fits-file-from-scratch
     fitsModelFile = outDir + "/"  + prefixOut + "Imodel.fits"
-    print "Creating an empty FITS file on disk"
-    print "> %s" % fitsModelFile
+    print("Creating an empty FITS file on disk")
+    print("> %s" % fitsModelFile)
     stub = np.zeros((10, 10, 10), dtype=dtFloat)
     hdu = pf.PrimaryHDU(data=stub)
     headModel = strip_fits_dims(header=headI, minDim=nDim)
@@ -225,12 +225,12 @@ def make_model_I(fitsI, freqFile, polyOrd=3, cutoff=-1, prefixOut="",
     if verbose:
         nPix = mskSrc.shape[-1] * mskSrc.shape[-2]
         nDetectPix = len(srcCoords)
-        print "Emission present in %d spectra (%.1f percent)." % \
-              (nDetectPix, (nDetectPix*100.0/nPix))
+        print("Emission present in %d spectra (%.1f percent)." % \
+              (nDetectPix, (nDetectPix*100.0/nPix)))
 
     # Inform user job magnitude
     startTime = time.time()
-    print "Fitting %d/%d spectra." % (nDetectPix, nPix)
+    print("Fitting %d/%d spectra." % (nDetectPix, nPix))
     j = 0
     nFailPix = 0
     if verbose:
@@ -281,12 +281,12 @@ def make_model_I(fitsI, freqFile, polyOrd=3, cutoff=-1, prefixOut="",
             except Exception:
                 nFailPix += 1
                 if debug:
-                    print "\nTRACEBACK:"
-                    print "-" * 80
-                    print traceback.format_exc()
-                    print "-" * 80
-                    print 
-                    print "> Setting Stokes I spectrum to NaN.\n"
+                    print("\nTRACEBACK:")
+                    print("-" * 80)
+                    print(traceback.format_exc())
+                    print("-" * 80)
+                    print() 
+                    print("> Setting Stokes I spectrum to NaN.\n")
                 fitDict["p"] = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
                 IModArr[:,yi,xi] = np.ones_like(IArr[:,yi,xi]) * np.nan
         
@@ -300,10 +300,10 @@ def make_model_I(fitsI, freqFile, polyOrd=3, cutoff=-1, prefixOut="",
         
     endTime = time.time()
     cputime = (endTime - startTime)
-    print "Fitting completed in %.2f seconds." % cputime
+    print("Fitting completed in %.2f seconds." % cputime)
     if nFailPix>0:
-        print "Warn: Fitting failed on %d/%d spectra  (%.1f percent)." % \
-              (nFailPix, nDetectPix, (nFailPix*100.0/nDetectPix))
+        print("Warn: Fitting failed on %d/%d spectra  (%.1f percent)." % \
+              (nFailPix, nDetectPix, (nFailPix*100.0/nDetectPix)))
     
     
 #-----------------------------------------------------------------------------#

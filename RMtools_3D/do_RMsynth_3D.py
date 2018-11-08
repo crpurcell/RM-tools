@@ -95,7 +95,7 @@ def main():
     # Sanity checks
     for f in args.fitsQ + args.fitsU:
         if not os.path.exists(f):
-            print "File does not exist: '%s'." % f
+            print("File does not exist: '%s'." % f)
             sys.exit()
     dataDir, dummy = os.path.split(args.fitsQ[0])
     
@@ -130,34 +130,34 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     headQ = pf.getheader(fitsQ, 0)
     headU = pf.getheader(fitsU, 0)
     if not headQ["NAXIS"] == headU["NAXIS"]:
-        print "Err: unequal header dimensions: Q = %d, U = %d." % \
-              (headQ["NAXIS"], headU["NAXIS"])
+        print("Err: unequal header dimensions: Q = %d, U = %d." % \
+              (headQ["NAXIS"], headU["NAXIS"]))
         sys.exit()
     if headQ["NAXIS"] < 3 or headQ["NAXIS"] > 4:
-        print "Err: only  3 dimensions supported: D = %d." % headQ["NAXIS"]
+        print("Err: only  3 dimensions supported: D = %d." % headQ["NAXIS"])
         sys.exit()
     for i in [str(x + 1) for x in range(3)]:
         if not headQ["NAXIS" + i] == headU["NAXIS" + i]:
-            print "Err: Axis %d of data are unequal: Q = %d, U = %d." % \
-                  (headQ["NAXIS" + i], headU["NAXIS" + i])
+            print("Err: Axis %d of data are unequal: Q = %d, U = %d." % \
+                  (headQ["NAXIS" + i], headU["NAXIS" + i]))
             sys.exit()
 
     # Check dimensions of Stokes I cube, if present
     if not fitsI is None:
         headI = pf.getheader(fitsI, 0)
         if not headI["NAXIS"] == headQ["NAXIS"]:
-            print "Err: unequal header dimensions: I = %d, Q = %d." % \
-                  (headI["NAXIS"], headQ["NAXIS"])
+            print("Err: unequal header dimensions: I = %d, Q = %d." % \
+                  (headI["NAXIS"], headQ["NAXIS"]))
             sys.exit()
         for i in [str(x + 1) for x in range(3)]:
             if not headI["NAXIS" + i] == headQ["NAXIS" + i]:
-                print "Err: Axis %d of data are unequal: I = %d, Q = %d." % \
-                      (headI["NAXIS" + i], headQ["NAXIS" + i])
+                print("Err: Axis %d of data are unequal: I = %d, Q = %d." % \
+                      (headI["NAXIS" + i], headQ["NAXIS" + i]))
                 sys.exit()
 
     # Feeback
-    print "The first 3 dimensions of the cubes are [X=%d, Y=%d, Z=%d]." % \
-          (headQ["NAXIS1"], headQ["NAXIS2"], headQ["NAXIS3"])
+    print("The first 3 dimensions of the cubes are [X=%d, Y=%d, Z=%d]." % \
+          (headQ["NAXIS1"], headQ["NAXIS2"], headQ["NAXIS3"]))
 
     # Read the frequency vector and wavelength sampling
     freqArr_Hz = np.loadtxt(freqFile, dtype=dtFloat)
@@ -182,10 +182,10 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     stopPhi_radm2 = + (nChanRM-1.0) * dPhi_radm2 / 2.0
     phiArr_radm2 = np.linspace(startPhi_radm2, stopPhi_radm2, nChanRM)
     phiArr_radm2 = phiArr_radm2.astype(dtFloat)
-    print "PhiArr = %.2f to %.2f by %.2f (%d chans)." % (phiArr_radm2[0],
+    print("PhiArr = %.2f to %.2f by %.2f (%d chans)." % (phiArr_radm2[0],
                                                         phiArr_radm2[-1],
                                                         float(dPhi_radm2),
-                                                        nChanRM)
+                                                        nChanRM))
     
     # Read the noise vector, if provided
     rmsArr_Jy = None
@@ -198,23 +198,23 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     else:
         weightType = "natural"
         weightArr = np.ones(freqArr_Hz.shape, dtype=dtFloat)    
-    print "Weight type is '%s'." % weightType
+    print("Weight type is '%s'." % weightType)
 
     # Read the Stokes data
     fQ = pf.open(fitsQ)
     fU = pf.open(fitsU)
-    print "Reading Q data array ...",
+    print("Reading Q data array ...", end=' ')
     if headQ["NAXIS"]==4:
         dataQ = fQ[0].data[0]
     else:
         dataQ = fQ[0].data
-    print "done."
-    print "Reading U data array ...",
+    print("done.")
+    print("Reading U data array ...", end=' ')
     if headU["NAXIS"]==4:
         dataU = fU[0].data[0]
     else:
         dataU = fU[0].data
-    print "done."
+    print("done.")
     fQ.close()
     fU.close()
     
@@ -223,12 +223,12 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     # Read the Stokes I model and divide into the Q & U data
     if fitsI:
         fI = pf.open(fitsI)
-        print "Reading I data array ...",
+        print("Reading I data array ...", end=' ')
         if headI["NAXIS"]==4:
             dataI = fI[0].data[0]
         else:
             dataI = fI[0].data
-            print "done."
+            print("done.")
     
         with np.errstate(divide='ignore', invalid='ignore'):
             qArr = np.true_divide(dataQ, dataI)
@@ -261,8 +261,8 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
 
     endTime = time.time()
     cputime = (endTime - startTime)
-    print "> RM-synthesis completed in %.2f seconds." % cputime
-    print "Saving the dirty FDF, RMSF and ancillary FITS files."
+    print("> RM-synthesis completed in %.2f seconds." % cputime)
+    print("Saving the dirty FDF, RMSF and ancillary FITS files.")
 
     # Determine the Stokes I value at lam0Sq_m2 from the Stokes I model
     # Note: the Stokes I model MUST be continuous throughout the cube,
@@ -294,7 +294,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
 
     # Save the dirty FDF
     fitsFileOut = outDir + "/" + prefixOut + "FDF_dirty.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     hdu0 = pf.PrimaryHDU(FDFcube.real.astype(dtFloat), header)
     hdu1 = pf.ImageHDU(FDFcube.imag.astype(dtFloat), header)
     hdu2 = pf.ImageHDU(np.abs(FDFcube).astype(dtFloat), header)
@@ -304,7 +304,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     
     # Save a maximum polarised intensity map
     fitsFileOut = outDir + "/" + prefixOut + "FDF_maxPI.fits"
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, np.max(np.abs(FDFcube), 0).astype(dtFloat), header,
                clobber=True, output_verify="fix")
     
@@ -314,7 +314,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     peakFDFmap = np.argmax(np.abs(FDFcube), 0).astype(dtFloat)
     peakFDFmap = header["CRVAL3"] + (peakFDFmap + 1
                                      - header["CRPIX3"]) * header["CDELT3"]
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, peakFDFmap, header, clobber=True,
                output_verify="fix")
     
@@ -324,7 +324,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     mom1FDFmap = (np.nansum(np.abs(FDFcube).transpose(1,2,0) * phiArr_radm2, 2)
                   /np.nansum(np.abs(FDFcube).transpose(1,2,0), 2))
     mom1FDFmap = mom1FDFmap.astype(dtFloat)
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, mom1FDFmap, header, clobber=True,
                output_verify="fix")
 
@@ -338,7 +338,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     header["DATAMIN"] = np.max(fwhmRMSFCube) - 1
     hdu3 = pf.ImageHDU(fwhmRMSFCube.astype(dtFloat), header)
     hduLst = pf.HDUList([hdu0, hdu1, hdu2, hdu3])
-    print "> %s" % fitsFileOut
+    print("> %s" % fitsFileOut)
     hduLst.writeto(fitsFileOut, output_verify="fix", clobber=True)
     hduLst.close()
 

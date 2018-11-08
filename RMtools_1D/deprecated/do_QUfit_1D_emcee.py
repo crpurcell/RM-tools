@@ -111,7 +111,7 @@ def main():
 
     # Sanity checks
     if not os.path.exists(args.dataFile[0]):
-        print "File does not exist: '%s'." % args.dataFile[0]
+        print("File does not exist: '%s'." % args.dataFile[0])
         sys.exit()
     dataDir, dummy = os.path.split(args.dataFile[0])
 
@@ -292,7 +292,7 @@ def plot_trace(sampler, inParms, chop=None, fig=None, title="Walker Chains"):
     for j in range(nDim):
         chain = sampler.chain[:,:,j].transpose()
         like = sampler.lnprobability.transpose()        
-	ax = fig.add_subplot(nDim, 1, j+1)
+        ax = fig.add_subplot(nDim, 1, j+1)
         stepArr = np.arange(chain.shape[0], dtype="f4")+1
 	#ax.plot(chain,'k', alpha = 0.3)
         for i in range(chain.shape[1]):
@@ -579,15 +579,15 @@ def wrap_chains(inParms, sampler, pos=None, shift=False, verbose=False):
                 wrapLow += (med - wrapCent)
                 wrapHigh += (med - wrapCent)
             if verbose:
-                print "> Wrapping parameter '%s' in range [%s, %s] ..." % \
-                    (inParms[fxi[j]]["parname"], wrapLow, wrapHigh),
+                print("> Wrapping parameter '%s' in range [%s, %s] ..." % \
+                    (inParms[fxi[j]]["parname"], wrapLow, wrapHigh), end=' ')
             for i in range(nSteps):
                 sampler.chain[:,i,j] = wrap_arr(sampler.chain[:,i,j],
                                                 wrapLow, wrapHigh)
             if pos is not None:
                 pos[:,j] = wrap_arr(pos[:,j], wrapLow, wrapHigh)
             if verbose:
-                print "done."
+                print("done.")
             
     if pos is None:
         return sampler
@@ -641,37 +641,37 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     prefixOut, ext = os.path.splitext(dataFile)
     
     # Read the data-file. Format=space-delimited, comments='#'.
-    print "Reading the data file '%s':" % dataFile
+    print("Reading the data file '%s':" % dataFile)
     # freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy
     try:
-        print "> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]",
+        print("> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]", end=' ')
         (freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy,
          dIArr_Jy, dQArr_Jy, dUArr_Jy) = \
          np.loadtxt(dataFile, unpack=True, dtype=dtFloat)
-        print "... success."
+        print("... success.")
     except Exception:
-        print "...failed."
+        print("...failed.")
         # freq_Hz, q_Jy, u_Jy, dq_Jy, du_Jy
         try:
-            print "Reading [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]",
+            print("Reading [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]", end=' ')
             (freqArr_Hz, QArr_Jy, UArr_Jy, dQArr_Jy, dUArr_Jy) = \
                          np.loadtxt(dataFile, unpack=True, dtype=dtFloat)
-            print "... success."
+            print("... success.")
             noStokesI = True
         except Exception:
-            print "...failed."
+            print("...failed.")
             if debug:
-                print traceback.format_exc()
+                print(traceback.format_exc())
             sys.exit()
     
     # If no Stokes I present, create a dummy spectrum = unity
     if noStokesI:
-        print "Warn: no Stokes I data in use."
+        print("Warn: no Stokes I data in use.")
         IArr_Jy = np.ones_like(QArr_Jy)
         dIArr_Jy = np.zeros_like(QArr_Jy)
         
     # Convert to GHz and mJy for convenience
-    print "Successfully read in the Stokes spectra."
+    print("Successfully read in the Stokes spectra.")
     freqArr_GHz = freqArr_Hz / 1e9
     lamSqArr_m2 = np.power(C/freqArr_Hz, 2.0)
     IArr_mJy = IArr_Jy * 1e3
@@ -695,7 +695,7 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     
     # Plot the data and the Stokes I model fit
     if showPlots:
-        print "Plotting the input data and spectral index fit."
+        print("Plotting the input data and spectral index fit.")
         freqHirArr_Hz =  np.linspace(freqArr_Hz[0], freqArr_Hz[-1], 10000)     
         IModHirArr_mJy = poly5(IfitDict["p"])(freqHirArr_Hz/1e9)    
         specFig = plt.figure(figsize=(12, 8))
@@ -724,7 +724,7 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     #-------------------------------------------------------------------------#
 
     # Load the model and parameters from the relevant file
-    print "\nLoading the model from file 'models_mc/m%d.py' ..."  % modelNum
+    print("\nLoading the model from file 'models_mc/m%d.py' ..."  % modelNum)
     mod = imp.load_source("m%d" % modelNum, "models_mc/m%d.py" % modelNum)
     global model
     model = mod.model
@@ -735,12 +735,12 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     p0 = ip.seed_walkers(nWalkers)
 
     # Call the lnlike_total function to test it works OK
-    print "> Calling ln(likelihood) as a test: L = ",
+    print("> Calling ln(likelihood) as a test: L = ", end=' ')
     L = lnlike_total(p0[0], ip, lamSqArr_m2,
                      qArr, dqArr, uArr, duArr)
-    print L
+    print(L)
     if np.isnan(L):
-        print "> Err: ln(likelihood) function returned NaN."
+        print("> Err: ln(likelihood) function returned NaN.")
         sys.exit()
 
     # Define an MCMC sampler object. 3rd argument is ln(likelihood) function
@@ -763,10 +763,10 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
             chainFigLst.append(plt.figure(figsize=(8, 8)))
         
     # Run the sampler to explore parameter space
-    print 'Explore parameter space for %d steps ...' % ip.nExploreSteps,
+    print('Explore parameter space for %d steps ...' % ip.nExploreSteps, end=' ')
     sys.stdout.flush()
     pos, prob, state = sampler.run_mcmc(p0, ip.nExploreSteps)
-    print 'done.'
+    print('done.')
     
     # Reset the samplers to a small range around the max(likelihood)
     maxPos = pos[np.argmax(prob, 0)]
@@ -774,7 +774,7 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     
     # Plot the chains for the exploration step
     if showPlots:
-        print 'Plotting the walker chains for the wide exploration step.'
+        print('Plotting the walker chains for the wide exploration step.')
         titleStr = "Exploring all likely parameter space."
         plot_trace(sampler, ip.inParms, title=titleStr)
     sampler.reset()
@@ -800,15 +800,15 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
                     "stat2": []}
     
     # Run the sampler, polling the statistics every nPollSteps
-    print "Running the sampler and polling every %d steps:" % (ip.nPollSteps)
+    print("Running the sampler and polling every %d steps:" % (ip.nPollSteps))
     if ip.runMode=="auto":
-        print "> Will attempt to detect MCMC chain stability."
-    print "Maximum steps set to %d." % ip.maxSteps
-    print ""
+        print("> Will attempt to detect MCMC chain stability.")
+    print("Maximum steps set to %d." % ip.maxSteps)
+    print("")
     while True:
         convergeFlg = False
         convergeFlgLst = []
-        print ".",
+        print(".", end=' ')
         sys.stdout.flush()
     
         # Run the sampler for nPollSteps
@@ -859,23 +859,23 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
 
         # If all traces have converged, continue
         if ip.runMode=="auto" and np.all(convergeFlgLst):
-            print "\n>Stability threshold passed!"
+            print("\n>Stability threshold passed!")
             break
 
         # Continue at the upper step limit
         if sampler.chain.shape[1]>ip.maxSteps:
-            print "\nMaximum number of steps performed."
+            print("\nMaximum number of steps performed.")
             break
 
     # Plot the likelihood trace and statistics
     if debug:
         plot_like_stats(likeStatDict)
         if not showPlots:
-            print "Press <RETURN> ...",
-            raw_input()
+            print("Press <RETURN> ...", end=' ')
+            input()
         
     # Discard the burn-in section of the chain
-    print "\nUsing the last %d steps to sample the posterior.\n" % ip.nSteps
+    print("\nUsing the last %d steps to sample the posterior.\n" % ip.nSteps)
     chainCut = sampler.chain[:,-ip.nSteps:,:]
     s = chainCut.shape
     flatChainCut = chainCut.reshape(s[0] * s[1], s[2])
@@ -884,7 +884,7 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     
     # Plot the chains
     if showPlots:
-        print 'Plotting the walker chains after polling ...'
+        print('Plotting the walker chains after polling ...')
         plot_trace_stats(sampler, ip.inParms, figLst=chainFigLst,
                          nSteps=ip.nSteps, statLst=statLst)
         
@@ -892,9 +892,9 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     # Marginalizing in MCMC is simple: select the axis of the parameter.
     # Update ip.inParms with the best-fitting values.
     pBest = []
-    print
-    print '-'*80
-    print 'RESULTS:\n'
+    print()
+    print('-'*80)
+    print('RESULTS:\n')
     for i in range(len(ip.fxi)):
         fChain = flatChainCut[:, i]
         g = lambda v: (v[1], v[2]-v[1], v[1]-v[0])
@@ -903,8 +903,8 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
         ip.inParms[ip.fxi[i]]['value'] = best
         ip.inParms[ip.fxi[i]]['errPlus'] = errPlus
         ip.inParms[ip.fxi[i]]['errMinus'] = errMinus
-        print '%s = %.4g (+%3g, -%3g)' % (ip.inParms[ip.fxi[i]]['parname'],
-                                          best, errPlus, errMinus)
+        print('%s = %.4g (+%3g, -%3g)' % (ip.inParms[ip.fxi[i]]['parname'],
+                                          best, errPlus, errMinus))
     
     # Calculate goodness-of-fit parameters
     nData = 2.0 * len(lamSqArr_m2)
@@ -917,15 +917,15 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     AIC = 2.0*ip.nDim - 2.0 * lnLike
     AICc = 2.0*ip.nDim*(ip.nDim+1)/(nData-ip.nDim-1) - 2.0 * lnLike
     BIC = ip.nDim * np.log(nData) - 2.0 * lnLike
-    print
-    print "DOF:", dof
-    print "CHISQ:", chiSq
-    print "CHISQ RED:", chiSqRed
-    print "AIC:", AIC
-    print "AICc", AICc
-    print "BIC", BIC
-    print
-    print '-'*80
+    print()
+    print("DOF:", dof)
+    print("CHISQ:", chiSq)
+    print("CHISQ RED:", chiSqRed)
+    print("AIC:", AIC)
+    print("AICc", AICc)
+    print("BIC", BIC)
+    print()
+    print('-'*80)
     
     # Create a save dictionary
     saveObj = {"inParms": ip.inParms,
@@ -949,11 +949,11 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
     fh = open(outFile, "wb")
     pkl.dump(saveObj, fh)
     fh.close()
-    print "> Results and MCMC chains saved in pickle file '%s'" % outFile
+    print("> Results and MCMC chains saved in pickle file '%s'" % outFile)
     
     # Plot the results
     if showPlots:
-        print "Plotting the best-fitting model."
+        print("Plotting the best-fitting model.")
         lamSqHirArr_m2 =  np.linspace(lamSqArr_m2[0], lamSqArr_m2[-1], 10000)
         freqHirArr_Hz = C / np.sqrt(lamSqHirArr_m2)
         IModArr_mJy = poly5(IfitDict["p"])(freqHirArr_Hz/1e9)
@@ -972,8 +972,8 @@ def run_qufit(dataFile, modelNum, nWalkers=200, nThreads=2, outDir="",
                               uModArr        = quModArr.imag,
                               fig            = specFig)
         specFig.canvas.draw()
-        print "> Press <RETURN> to exit ...",
-        raw_input()
+        print("> Press <RETURN> to exit ...", end=' ')
+        input()
 
 
 #-----------------------------------------------------------------------------#

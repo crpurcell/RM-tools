@@ -1,7 +1,7 @@
 # License is MIT: see LICENSE.md.
 """Nestle: nested sampling routines to evaluate Bayesian evidence."""
 
-from __future__ import print_function, division
+
 
 import sys
 import warnings
@@ -154,10 +154,10 @@ class Result(dict):
     __delattr__ = dict.__delitem__
 
     def __repr__(self):
-        if self.keys():
-            m = max(map(len, list(self.keys()))) + 1
+        if list(self.keys()):
+            m = max(list(map(len, list(self.keys())))) + 1
             return '\n'.join([k.rjust(m) + ': ' + repr(v)
-                              for k, v in self.items()])
+                              for k, v in list(self.items())])
         else:
             return self.__class__.__name__ + "()"
 
@@ -564,7 +564,7 @@ class FakePool(object):
         return FakeFuture(fn, *args, **kwargs)
 
     def map(self, func, *iterables):
-        return map(func, *iterables)
+        return list(map(func, *iterables))
 
     def shutdown(self):
         pass
