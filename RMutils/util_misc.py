@@ -7,7 +7,7 @@
 #                                                                             #
 # REQUIRED: Requires numpy and astropy.                                       #
 #                                                                             #
-# MODIFIED: 19-Mar-2018 by C. Purcell                                         #
+# MODIFIED: 12-Mar-2018 by C. Purcell                                         #
 #                                                                             #
 # CONTENTS:                                                                   #
 #                                                                             #
@@ -84,7 +84,7 @@ import sqlite3
 import csv
 import json
 
-from .mpfit import mpfit
+from RMutils.mpfit import mpfit
 
 C = 2.99792458e8
 
@@ -171,11 +171,7 @@ def csv_read_to_list(fileName, delim=",", doFloat=False):
         if len(line)<1:
             continue
         if doFloat:
-            for i, x in enumerate(line):
-                try:
-                    line[i] = float(x)
-                except Exception:
-                    pass
+            line = [float(x) for x in line]
         
         outLst.append(line)
 
@@ -263,10 +259,10 @@ def progress(width, percent):
     marks = m.floor(width * (percent / 100.0))
     spaces = m.floor(width - marks)
     loader = '  [' + ('=' * int(marks)) + (' ' * int(spaces)) + ']'
-    sys.stdout.write("%s %d%%\r" % (loader, percent))
-    if percent >= 100:
-        sys.stdout.write("\n")
-    sys.stdout.flush()
+    #sys.stdout.write("%s %d%%\r" % (loader, percent))
+    #if percent >= 100:
+    #    sys.stdout.write("\n")
+    #sys.stdout.flush()
 
 
 #-----------------------------------------------------------------------------#
@@ -326,14 +322,14 @@ def create_frac_spectra(freqArr, IArr, QArr, UArr, dIArr, dQArr, dUArr,
         fitDict["nIter"] = mp.niter
         IModArr = poly5(fitDict["p"])(freqArr)
 
-        if verbose:
-            print("\n")
-            print(("-"*80))
-            print("Details of the polynomial fit to the spectrum:")
-            for key, val in fitDict.items():
-                print((" %s = %s" % (key, val)))
-            print(("-"*80))
-            print("\n")
+        #if verbose:
+        #    print("\n")
+        #    print("-"*80)
+        #    print("Details of the polynomial fit to the spectrum:")
+        #    for key, val in fitDict.iteritems():
+        #        print(" %s = %s" % (key, val))
+        #    print("-"*80)
+        #    print("\n")
     except Exception:
         print("Err: Failed to fit polynomial to Stokes I spectrum.")
         if debug:
