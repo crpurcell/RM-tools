@@ -5,7 +5,7 @@
 #                                                                             #
 # PURPOSE:  Run RM-synthesis on an ASCII Stokes I, Q & U spectrum.            #
 #                                                                             #
-# MODIFIED: 31-Jan-2018 by C. Purcell                                         #
+# MODIFIED: 15-Nov-2018 by J. West                                            #
 #                                                                             #
 #=============================================================================#
 #                                                                             #
@@ -450,6 +450,7 @@ def run_rmsynth(dataFile, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
         print("Press <RETURN> to exit ...", end=' ')
         input()
 
+    return mDict
 
 #-----------------------------------------------------------------------------#
 if __name__ == "__main__":
