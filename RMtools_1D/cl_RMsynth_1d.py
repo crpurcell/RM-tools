@@ -78,27 +78,27 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
 
     # freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy
     try:
-        #if verbose: print "> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]",
+        if verbose: print("> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]", end=' ')
         (freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy, dIArr_Jy, dQArr_Jy, dUArr_Jy) = data 
-        #if verbose: print "... success."
+        if verbose: print("... success.")
     except Exception:
-        #if verbose: print "...failed."
+        if verbose: print("...failed.")
         # freq_Hz, q_Jy, u_Jy, dq_Jy, du_Jy
         try:
-            #if verbose: print "> Trying [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]",
+            if verbose: print("> Trying [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]", end=' ')
             (freqArr_Hz, QArr_Jy, UArr_Jy, dQArr_Jy, dUArr_Jy) = data 
-            #if verbose: print "... success."
+            if verbose: print("... success.")
             noStokesI = True
         except Exception:
-            #if verbose: print "...failed."
-            #if debug:
-            #    print traceback.format_exc()
+            if verbose: print("...failed.")
+            if debug:
+                print(traceback.format_exc())
             sys.exit()
-    #if verbose: print "Successfully read in the Stokes spectra."
+    if verbose: print("Successfully read in the Stokes spectra.")
 
     # If no Stokes I present, create a dummy spectrum = unity
     if noStokesI:
-        #if verbose: print "Warn: no Stokes I data in use."
+        if verbose: print("Warn: no Stokes I data in use.")
         IArr_Jy = np.ones_like(QArr_Jy)
         dIArr_Jy = np.zeros_like(QArr_Jy)
         
@@ -128,7 +128,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
 
     # Plot the data and the Stokes I model fit
     if showPlots:
-        #if verbose: print "Plotting the input data and spectral index fit."
+        if verbose: print("Plotting the input data and spectral index fit.")
         freqHirArr_Hz =  np.linspace(freqArr_Hz[0], freqArr_Hz[-1], 10000)     
         IModHirArr_mJy = poly5(fitDict["p"])(freqHirArr_Hz/1e9)    
         specFig = plt.figure(figsize=(12.0, 8))
@@ -195,18 +195,18 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     stopPhi_radm2 = + (nChanRM-1.0) * dPhi_radm2 / 2.0
     phiArr_radm2 = np.linspace(startPhi_radm2, stopPhi_radm2, nChanRM)
     phiArr_radm2 = phiArr_radm2.astype(dtFloat)
-    #if verbose: print "PhiArr = %.2f to %.2f by %.2f (%d chans)." % (phiArr_radm2[0],
-    #                                                     phiArr_radm2[-1],
-    #                                                     float(dPhi_radm2),
-    #                                                     nChanRM)
-    
+    if verbose: print("PhiArr = %.2f to %.2f by %.2f (%d chans)." % (phiArr_radm2[0],
+                                                         phiArr_radm2[-1],
+                                                         float(dPhi_radm2),
+                                                         nChanRM))
+                                                             
     # Calculate the weighting as 1/sigma^2 or all 1s (natural)
     if weightType=="variance":
         weightArr = 1.0 / np.power(dQUArr_mJy, 2.0)
     else:
         weightType = "natural"
         weightArr = np.ones(freqArr_Hz.shape, dtype=dtFloat)
-    #if verbose: print "Weight type is '%s'." % weightType
+    if verbose: print("Weight type is '%s'." % weightType)
 
     startTime = time.time()
     
@@ -242,7 +242,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     
     endTime = time.time()
     cputime = (endTime - startTime)
-    #if verbose: print "> RM-synthesis completed in %.2f seconds." % cputime
+    if verbose: print("> RM-synthesis completed in %.2f seconds." % cputime)
     
     # Determine the Stokes I value at lam0Sq_m2 from the Stokes I model
     # Multiply the dirty FDF by Ifreq0 to recover the PI in Jy
@@ -270,6 +270,13 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     mDict["fwhmRMSF"] = toscalar(fwhmRMSF)
     mDict["dQU_Jybm"] = toscalar(nanmedian(dQUArr_Jy))
     mDict["dFDFth_Jybm"] = toscalar(dFDFth_Jybm)
+    mDict["phiArr_radm2"] = phiArr_radm2
+    mDict["phi2Arr_radm2"] = phi2Arr_radm2
+    mDict["RMSFArr"] = RMSFArr
+    mDict["freqArr_Hz"] = freqArr_Hz
+    mDict["weightArr"]=weightArr
+    mDict["dirtyFDF"]=dirtyFDF
+    
     #pdb.set_trace()
     # Measure the complexity of the q and u spectra
     mDict["fracPol"] = mDict["ampPeakPIfit_Jybm"]/(Ifreq0_mJybm/1e3)
@@ -299,57 +306,34 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                      mDict=mDict)
         tmpFig.show()
     
-    # Save the  dirty FDF, RMSF and weight array to ASCII files
-    #if verbose: print "Saving the dirty FDF, RMSF weight arrays to ASCII files."
-    #outFile = prefixOut + "_FDFdirty.dat"
-    #if verbose: print "> %s" % outFile
-    #np.savetxt(outFile, zip(phiArr_radm2, dirtyFDF.real, dirtyFDF.imag))
-    #outFile = prefixOut + "_RMSF.dat"
-    #if verbose: print "> %s" % outFile
-    #np.savetxt(outFile, zip(phi2Arr_radm2, RMSFArr.real, RMSFArr.imag))
-    #outFile = prefixOut + "_weight.dat"
-    #if verbose: print "> %s" % outFile
-    #np.savetxt(outFile, zip(freqArr_Hz, weightArr))
-
-    # Save the measurements to a "key=value" text file
-    #if verbose: print "Saving the measurements on the FDF in 'key=val' and JSON formats."
-    #outFile = prefixOut + "_RMsynth.dat"
-    #if verbose: print "> %s" % outFile
-    #FH = open(outFile, "w")
-    #for k, v in mDict.iteritems():
-    #    FH.write("%s=%s\n" % (k, v))
-    #FH.close()
-    #outFile = prefixOut + "_RMsynth.json"
-    #if verbose: print "> %s" % outFile
-    #json.dump(dict(mDict), open(outFile, "w"))
-
-    # Print the results to the screen
-    #if verbose: print
-    #if verbose: print '-'*80
-    #if verbose: print 'RESULTS:\n'
-    #if verbose: print 'FWHM RMSF = %.4g rad/m^2' % (mDict["fwhmRMSF"])
+    if verbose: 
+       # Print the results to the screen
+       print()
+       print('-'*80)
+       print('RESULTS:\n')
+       print('FWHM RMSF = %.4g rad/m^2' % (mDict["fwhmRMSF"]))
     
-    #if verbose: print 'Pol Angle = %.4g (+/-%.4g) deg' % (mDict["polAngleFit_deg"],
-    #                                          mDict["dPolAngleFit_deg"])
-    #if verbose: print 'Pol Angle 0 = %.4g (+/-%.4g) deg' % (mDict["polAngle0Fit_deg"],
-    #                                            mDict["dPolAngle0Fit_deg"])
-    #if verbose: print 'Peak FD = %.4g (+sav/-%.4g) rad/m^2' % (mDict["phiPeakPIfit_rm2"],
-    #                                            mDict["dPhiPeakPIfit_rm2"])
-    #if verbose: print 'freq0_GHz = %.4g ' % (mDict["freq0_Hz"]/1e9)
-    #if verbose: print 'I freq0 = %.4g mJy/beam' % (mDict["Ifreq0_mJybm"])
-    #if verbose: print 'Peak PI = %.4g (+/-%.4g) mJy/beam' % (mDict["ampPeakPIfit_Jybm"]*1e3,
-    #                                            mDict["dAmpPeakPIfit_Jybm"]*1e3)
-    #if verbose: print 'QU Noise = %.4g mJy/beam' % (mDict["dQU_Jybm"]*1e3)
-    #if verbose: print 'FDF Noise (theory)   = %.4g mJy/beam' % (mDict["dFDFth_Jybm"]*1e3)
-    #if verbose: print 'FDF SNR = %.4g ' % (mDict["snrPIfit"])
-    #if verbose: print 'sigma_add(q) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddQ"],
-    #                                        mDict["dSigmaAddPlusQ"],
-    #                                        mDict["dSigmaAddMinusQ"])
-    #if verbose: print 'sigma_add(u) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddU"],
-    #                                        mDict["dSigmaAddPlusU"],
-    #                                        mDict["dSigmaAddMinusU"])
-    #if verbose: print
-    #if verbose: print '-'*80
+       print('Pol Angle = %.4g (+/-%.4g) deg' % (mDict["polAngleFit_deg"],
+                                              mDict["dPolAngleFit_deg"]))
+       print('Pol Angle 0 = %.4g (+/-%.4g) deg' % (mDict["polAngle0Fit_deg"],
+                                                mDict["dPolAngle0Fit_deg"]))
+       print('Peak FD = %.4g (+/-%.4g) rad/m^2' % (mDict["phiPeakPIfit_rm2"],
+                                                mDict["dPhiPeakPIfit_rm2"]))
+       print('freq0_GHz = %.4g ' % (mDict["freq0_Hz"]/1e9))
+       print('I freq0 = %.4g mJy/beam' % (mDict["Ifreq0_mJybm"]))
+       print('Peak PI = %.4g (+/-%.4g) mJy/beam' % (mDict["ampPeakPIfit_Jybm"]*1e3,
+                                                mDict["dAmpPeakPIfit_Jybm"]*1e3))
+       print('QU Noise = %.4g mJy/beam' % (mDict["dQU_Jybm"]*1e3))
+       print('FDF Noise (theory)   = %.4g mJy/beam' % (mDict["dFDFth_Jybm"]*1e3))
+       print('FDF SNR = %.4g ' % (mDict["snrPIfit"]))
+       print('sigma_add(q) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddQ"],
+                                            mDict["dSigmaAddPlusQ"],
+                                            mDict["dSigmaAddMinusQ"]))
+       print('sigma_add(u) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddU"],
+                                            mDict["dSigmaAddPlusU"],
+                                            mDict["dSigmaAddMinusU"]))
+       print()
+       print('-'*80)
     
 
     # Plot the RM Spread Function and dirty FDF
@@ -379,3 +363,80 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
         input()
 
     return mDict
+    
+def readFile(dataFile, nBits, verbose):
+    """
+    Read the I, Q & U data from the ASCII file.
+    """
+
+    # Default data types
+    dtFloat = "float" + str(nBits)
+    dtComplex = "complex" + str(2*nBits)
+
+    # Output prefix is derived from the input file name
+    
+
+    # Read the data-file. Format=space-delimited, comments="#".
+    if verbose: print("Reading the data file '%s':" % dataFile)
+    # freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy
+    try:
+        if verbose: print("> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]", end=' ')
+        (freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy,
+         dIArr_Jy, dQArr_Jy, dUArr_Jy) = \
+         np.loadtxt(dataFile, unpack=True, dtype=dtFloat)
+        if verbose: print("... success.")
+    except Exception:
+        if verbose: print("...failed.")
+        # freq_Hz, q_Jy, u_Jy, dq_Jy, du_Jy
+        try:
+            if verbose: print("> Trying [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]", end=' ')
+            (freqArr_Hz, QArr_Jy, UArr_Jy, dQArr_Jy, dUArr_Jy) = \
+                         np.loadtxt(dataFile, unpack=True, dtype=dtFloat)
+            if verbose: print("... success.")
+            noStokesI = True
+        except Exception:
+            if verbose: print("...failed.")
+            if debug:
+                print(traceback.format_exc())
+            sys.exit()
+    if verbose: print("Successfully read in the Stokes spectra.")
+    data=[freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy, dIArr_Jy, dQArr_Jy, dUArr_Jy]
+    return data
+
+def saveOutput(outdict, prefixOut, verbose):
+    # Save the  dirty FDF, RMSF and weight array to ASCII files
+    if verbose: print("Saving the dirty FDF, RMSF weight arrays to ASCII files.")
+    if verbose: 
+       outFile = prefixOut + "_FDFdirty.dat"
+       print("> %s" % outFile)
+    np.savetxt(outFile, list(zip(outdict["phiArr_radm2"], outdict["dirtyFDF"].real, outdict["dirtyFDF"].imag)))
+    
+    if verbose: 
+       outFile = prefixOut + "_RMSF.dat"
+       print("> %s" % outFile)       
+    np.savetxt(outFile, list(zip(outdict["phi2Arr_radm2"], outdict["RMSFArr"].real, outdict["RMSFArr"].imag)))
+    
+    if verbose: 
+       outFile = prefixOut + "_weight.dat"
+       print("> %s" % outFile)
+    np.savetxt(outFile, list(zip(outdict["freqArr_Hz"], outdict["weightArr"])))
+
+    # Save the measurements to a "key=value" text file
+    if verbose: 
+       print("Saving the measurements on the FDF in 'key=val' and JSON formats.")
+       outFile = prefixOut + "_RMsynth.dat"
+       print("> %s" % outFile)
+
+    FH = open(outFile, "w")
+    for k, v in outdict.items():
+        FH.write("%s=%s\n" % (k, v))
+    FH.close()
+       
+    #json.dump(dict(outdict), open(outFile, "w"))       
+    #if verbose: 
+    #   outFile = prefixOut + "_RMsynth.json"
+    #   print("> %s" % outFile)
+
+
+
+
