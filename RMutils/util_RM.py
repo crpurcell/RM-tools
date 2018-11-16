@@ -115,19 +115,19 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
     
     # Sanity check on array sizes
     if not weightArr.shape  == lambdaSqArr_m2.shape:
-        print "Err: Lambda^2 and weight arrays must be the same shape."
+        print("Err: Lambda^2 and weight arrays must be the same shape.")
         return None, None
     if not dataQ.shape == dataU.shape:
-        print "Err: Stokes Q and U data arrays must be the same shape."
+        print("Err: Stokes Q and U data arrays must be the same shape.")
         return None, None
     nDims = len(dataQ.shape)
     if not nDims <= 3:
-        print "Err: data dimensions must be <= 3."
+        print("Err: data dimensions must be <= 3.")
         return None, None
     if not dataQ.shape[0] == lambdaSqArr_m2.shape[0]:
-        print "Err: Data depth does not match lambda^2 vector (%d vs %d)." \
-              % (dataQ.shape[0], lambdaSqArr_m2.shape[0])
-        print "     Check that data is in [z, y, x] order."
+        print("Err: Data depth does not match lambda^2 vector (%d vs %d).", end=' ')
+        (dataQ.shape[0], lambdaSqArr_m2.shape[0])
+        print("     Check that data is in [z, y, x] order.")
         return None, None
     
     # Reshape the data arrays to 3 dimensions
@@ -173,7 +173,7 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
         
     # Do the RM-synthesis on each plane
     if verbose:
-        #print "Running RM-synthesis by channel."
+        print("Running RM-synthesis by channel.")
         progress(40, 0)
     a = lambdaSqArr_m2 - lam0Sq_m2
     for i in range(nPhi):
@@ -244,15 +244,15 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
     
     # Sanity checks on array sizes
     if not weightArr.shape  == lambdaSqArr_m2.shape:
-        print "Err: wavelength^2 and weight arrays must be the same shape."
+        print("Err: wavelength^2 and weight arrays must be the same shape.")
         return None, None, None, None
     if not nDims <= 3:
-        print "Err: mask dimensions must be <= 3."
+        print("Err: mask dimensions must be <= 3.")
         return None, None, None, None
     if not mskArr.shape[0] == lambdaSqArr_m2.shape[0]:
-        print "Err: mask depth does not match lambda^2 vector (%d vs %d)." \
-              % (mskArr.shape[0], lambdaSqArr_m2.shape[-1])
-        print "     Check that the mask is in [z, y, x] order."
+        print("Err: mask depth does not match lambda^2 vector (%d vs %d).", end=' ')
+        (mskArr.shape[0], lambdaSqArr_m2.shape[-1])
+        print("     Check that the mask is in [z, y, x] order.")
         return None, None, None, None
     
     # Reshape the mask array to 3 dimensions
@@ -302,7 +302,7 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
     # Do a simple 1D calculation and replicate along X & Y axes
     if do1Dcalc:
         if verbose:
-            print "Calculating 1D RMSF and replicating along X & Y axes."
+            print("Calculating 1D RMSF and replicating along X & Y axes.")
 
         # Calculate the RMSF
         a = (-2.0 * 1j * phi2Arr).astype(dtComplex)
@@ -313,15 +313,15 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
         fitStatus = -1
         if fitRMSF:
             if verbose:
-                print "Fitting Gaussian to the main lobe."
+                print("Fitting Gaussian to the main lobe.")
             if fitRMSFreal:
                 mp = fit_rmsf(phi2Arr, RMSFcube.real)
             else:
                 mp = fit_rmsf(phi2Arr, np.abs(RMSFArr))
             if mp is None or mp.status<1:
                  pass
-                print "Err: failed to fit the RMSF."
-                print "     Defaulting to analytical value."
+                 print("Err: failed to fit the RMSF.")
+                 print("     Defaulting to analytical value.")
             else:
                 fwhmRMSF = mp.params[2]
                 fitStatus = mp.status
@@ -334,7 +334,7 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
     # Calculate the RMSF at each pixel
     else:
         if verbose:
-            print "Calculating RMSF by channel."
+            print("Calculating RMSF by channel.")
 
         # The K value used to scale each RMSF must take into account
         # isolated flagged voxels data in the datacube
@@ -361,8 +361,8 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
         # Fit the RMSF main lobe
         if fitRMSF:
             if verbose:
-                print "Fitting main lobe in each RMSF spectrum."
-                print "> This may take some time!"
+                print("Fitting main lobe in each RMSF spectrum.")
+                print("> This may take some time!")
             progress(40, 0)
             k = 0
             for i in range(nX):
@@ -467,30 +467,30 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
     # Sanity checks on array sizes
     nPhi = phiArr_radm2.shape[0]
     if nPhi != dirtyFDF.shape[0]:
-        print "Err: 'phi2Arr_radm2' and 'dirtyFDF' are not the same length."
+        print("Err: 'phi2Arr_radm2' and 'dirtyFDF' are not the same length.")
         return None, None, None
     nPhi2 = phi2Arr_radm2.shape[0]
     if not nPhi2 == RMSFArr.shape[0]:
-        print "Err: missmatch in 'phi2Arr_radm2' and 'RMSFArr' length."
+        print("Err: missmatch in 'phi2Arr_radm2' and 'RMSFArr' length.")
         return None, None, None
     if not (nPhi2 >= 2 * nPhi):
-        print "Err: the Faraday depth of the RMSF must be twice the FDF."
+        print("Err: the Faraday depth of the RMSF must be twice the FDF.")
         return None, None, None
     nDims = len(dirtyFDF.shape)
     if not nDims <= 3:
-        print "Err: FDF array dimensions must be <= 3."
+        print("Err: FDF array dimensions must be <= 3.")
         return None, None, None
     if not nDims == len(RMSFArr.shape):
-        print "Err: the input RMSF and FDF must have the same number of axes."
+        print("Err: the input RMSF and FDF must have the same number of axes.")
         return None, None, None
     if not RMSFArr.shape[1:]==dirtyFDF.shape[1:]:
-        print "Err: the xy dimesions of the RMSF and FDF must match."
+        print("Err: the xy dimesions of the RMSF and FDF must match.")
         return None, None, None
     if mskArr is not None:
         if not mskArr.shape==dirtyFDF.shape[1:]:
-            print "Err: pixel mask must match xy dimesnisons of FDF cube."
-            print "     FDF[z,y,z] = %s, Mask[y,x] = %s." % (dirtyFDF.shape,
-                                                             mskArr.shape)
+            print("Err: pixel mask must match xy dimesnisons of FDF cube.")
+            print("     FDF[z,y,z] = %s, Mask[y,x] = %s.", end=' ')
+            (dirtyFDF.shape, mskArr.shape)
             return None, None, None
     else:
         mskArr = np.ones(dirtyFDF.shape[1:], dtype="bool") 
@@ -517,7 +517,8 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
     if verbose:
         nPix = dirtyFDF.shape[-1]* dirtyFDF.shape[-2]
         nCleanPix = len(xyCoords)
-        print "Cleaning %d/%d spectra." % (nCleanPix, nPix)
+        print("Cleaning %d/%d spectra.", end=' ')
+        (nCleanPix, nPix)
     
     # Initialise arrays to hold the residual FDF, clean components, clean FDF
     residFDF = dirtyFDF.copy()
@@ -769,7 +770,7 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
     Currently this function assumes that the noise levels in the Stokes Q
     and U spectra are the same.
     """
-   
+    
     # Determine the peak channel in the FDF, its amplitude and index
     absFDF = np.abs(FDF)
     ampPeakPIchan = np.nanmax(absFDF)
@@ -1214,19 +1215,19 @@ def do_rmsynth(dataQ, dataU, lamSqArr, phiArr, weight=None, dtype='float32'):
     
     # Sanity check on array sizes
     if not weightArr.shape  == lamSqArr.shape:
-        print "Err: Lambda^2 and weight arrays must be the same shape."
+        print("Err: Lambda^2 and weight arrays must be the same shape.")
         return None, [None, None], None, None
     if not dataQ.shape == dataU.shape:
-        print "Err: Stokes Q and U data arrays must be the same shape."
+        print("Err: Stokes Q and U data arrays must be the same shape.")
         return None, [None, None], None, None
     nDims = len(dataQ.shape)
     if not nDims <= 3:
-        print "Err: data-dimensions must be <= 3."
+        print("Err: data-dimensions must be <= 3.")
         return None, [None, None], None, None
     if not dataQ.shape[-1] == lamSqArr.shape[-1]:
-        print "Err: The Stokes Q and U arrays mush be in spectral order."
-        print "     # Stokes = %d, # Lamda = %d." % (dataQ.shape[-1],
-                                                     lamSqArr.shape[-1])
+        print("Err: The Stokes Q and U arrays mush be in spectral order.")
+        print("     # Stokes = %d, # Lamda = %d.", end=' ')
+        (dataQ.shape[-1], lamSqArr.shape[-1])
         return None, [None, None], None, None
 
     # Reshape data arrays to allow the same recipies to work on all
@@ -1342,8 +1343,8 @@ def get_RMSF(lamSqArr, phiArr, weightArr=None, lam0Sq_m2=None, double=True,
             mp = fit_rmsf(phi2Arr, np.abs(RMSFArr))
         if mp is None or mp.status<1:
             pass
-            print "Err: failed to fit the RMSF."
-            print "Defaulting to analytical value in natural case."
+            print("Err: failed to fit the RMSF.")
+            print("Defaulting to analytical value in natural case.")
         else:
             fwhmRMSF = mp.params[2]
             
@@ -1362,30 +1363,30 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
    
     # Check that dirtyFDF is ID and get its length
     if len(dirtyFDF.shape) != 1:
-        print "Err: the dirty FDF is not a 1D array."
+        print("Err: the dirty FDF is not a 1D array.")
         sys.exit(1)
     nFDF = dirtyFDF.shape[0]
 
     # Check that dirtyFDF is a complex array
     if not np.iscomplexobj(dirtyFDF):
-        print "Err: the dirty FDF is not a complex array."
+        print("Err: the dirty FDF is not a complex array.")
         sys.exit(1)
         
     # Check that phiArr is 1D and get its length
     if len(phiArr.shape) != 1:
-        print "Err: the phi array is not a 1D array."
+        print("Err: the phi array is not a 1D array.")
         sys.exit(1)
     nPhi = phiArr.shape[0]
 
     # Check that the lamSqArr is 1D and get its length
     if len(lamSqArr.shape) != 1:
-        print "Err: the lamSqArr array is not a 1D array."
+        print("Err: the lamSqArr array is not a 1D array.")
         sys.exit(1)
     nlamSq = lamSqArr.shape[0]
 
     # Check that phiArr and FDF arrays are the same length
     if nPhi != nFDF:
-        print 'Err: the phiArr and dirty FDF are not the same length.'
+        print('Err: the phiArr and dirty FDF are not the same length.')
         sys.exit(1)
     
     # If the RMSF has been passed in then check for correct formatting:
@@ -1395,27 +1396,27 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
 
         # Check 1D
         if len(RMSFArr.shape) != 1:
-            print "Err: input RMSF must be a 1D array."
+            print("Err: input RMSF must be a 1D array.")
             sys.exit(1)
         nRMSF = RMSFArr.shape[0]
         
         # Check complex
         if not np.iscomplexobj(RMSFArr):
-            print "Err: the RMSF is not a complex array."
+            print("Err: the RMSF is not a complex array.")
             sys.exit(1)
     
         # Check RMSF is at least double the FDF spectrum
         if not (nRMSF >= 2 * nFDF):
-            print 'Err: the RMSF must be twice the length of the FDF.'
+            print('Err: the RMSF must be twice the length of the FDF.')
             sys.exit(1)
 
         # Check that phiSampArr is also present and the same length
         if RMSFphiArr is None:
-            print 'Err: the phi sampling array must be passed with the RMSF.'
+            print('Err: the phi sampling array must be passed with the RMSF.')
             sys.exit(1)
         nRMSFphi = RMSFphiArr.shape[0]
         if not nRMSF==nRMSFphi:
-            print 'Err: the RMSF and phi sampling array must be equal length.'
+            print('Err: the RMSF and phi sampling array must be equal length.')
             sys.exit(1)
             
         # Calculate or fit the main-lobe FWHM of the RMSF
@@ -1428,8 +1429,8 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
             mp = fit_rmsf(RMSFphiArr, np.abs(RMSFArr))
         if mp is None or mp.status<1:
             pass
-            print 'Err: failed to fit the RMSF.'
-            print "Defaulting to analytical value in natural case."
+            print('Err: failed to fit the RMSF.')
+            print("Defaulting to analytical value in natural case.")
         else:
             fwhmRMSF = mp.params[2]
     
@@ -1441,7 +1442,7 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
     
         # Check weightArr and lamSqArr have the same length
         if not weightArr.shape[0] == lamSqArr.shape[0]:
-            print 'Err: the lamSqArr and weightArr are not the same length.'
+            print('Err: the lamSqArr and weightArr are not the same length.')
             sys.exit(1)
             
     # or else use natural weighting
@@ -1500,7 +1501,7 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
     # Main CLEAN loop
     iterCount = 0
     while ( np.max(np.abs(residFDF)) >= cutoff and iterCount < maxIter ):
-        print np.max(np.abs(residFDF)), cutoff
+        print(np.max(np.abs(residFDF)), cutoff)
         # Get the absolute peak channel and values of the residual FDF at peak
         indxPeakFDF = np.nanargmax(np.abs(residFDF))
         peakFDFvals = residFDF[indxPeakFDF]
@@ -1547,7 +1548,8 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
 
         # Iterate ...
         iterCount += 1
-        print "Iteration %d" % iterCount
+        print("Iteration %d", end=' ')
+        iterCount
 
     # End clean loop ---------------------------------------------------------#
 

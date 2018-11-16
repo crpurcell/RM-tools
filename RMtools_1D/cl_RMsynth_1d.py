@@ -301,13 +301,14 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                      mDict=mDict)
         tmpFig.show()
     
-    #add arrays at end of dictionary
-    mDict["phiArr_radm2"] = phiArr_radm2
-    mDict["phi2Arr_radm2"] = phi2Arr_radm2
-    mDict["RMSFArr"] = RMSFArr
-    mDict["freqArr_Hz"] = freqArr_Hz
-    mDict["weightArr"]=weightArr
-    mDict["dirtyFDF"]=dirtyFDF
+    #add array dictionary
+    aDict = dict()
+    aDict["phiArr_radm2"] = phiArr_radm2
+    aDict["phi2Arr_radm2"] = phi2Arr_radm2
+    aDict["RMSFArr"] = RMSFArr
+    aDict["freqArr_Hz"] = freqArr_Hz
+    aDict["weightArr"]=weightArr
+    aDict["dirtyFDF"]=dirtyFDF
     
     if verbose: 
        # Print the results to the screen
@@ -365,7 +366,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
         #if verbose: print "Press <RETURN> to exit ...",
         input()
 
-    return mDict
+    return mDict, aDict
     
 def readFile(dataFile, nBits, verbose):
     """
@@ -406,23 +407,23 @@ def readFile(dataFile, nBits, verbose):
     data=[freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy, dIArr_Jy, dQArr_Jy, dUArr_Jy]
     return data
 
-def saveOutput(outdict, prefixOut, verbose):
+def saveOutput(outdict, arrdict, prefixOut, verbose):
     # Save the  dirty FDF, RMSF and weight array to ASCII files
     if verbose: print("Saving the dirty FDF, RMSF weight arrays to ASCII files.")
     if verbose: 
        outFile = prefixOut + "_FDFdirty.dat"
        print("> %s" % outFile)
-    np.savetxt(outFile, list(zip(outdict["phiArr_radm2"], outdict["dirtyFDF"].real, outdict["dirtyFDF"].imag)))
+    np.savetxt(outFile, list(zip(arrdict["phiArr_radm2"], arrdict["dirtyFDF"].real, arrdict["dirtyFDF"].imag)))
     
     if verbose: 
        outFile = prefixOut + "_RMSF.dat"
        print("> %s" % outFile)       
-    np.savetxt(outFile, list(zip(outdict["phi2Arr_radm2"], outdict["RMSFArr"].real, outdict["RMSFArr"].imag)))
+    np.savetxt(outFile, list(zip(arrdict["phi2Arr_radm2"], arrdict["RMSFArr"].real, arrdict["RMSFArr"].imag)))
     
     if verbose: 
        outFile = prefixOut + "_weight.dat"
        print("> %s" % outFile)
-    np.savetxt(outFile, list(zip(outdict["freqArr_Hz"], outdict["weightArr"])))
+    np.savetxt(outFile, list(zip(arrdict["freqArr_Hz"], arrdict["weightArr"])))
 
     # Save the measurements to a "key=value" text file
     if verbose: 
@@ -435,11 +436,11 @@ def saveOutput(outdict, prefixOut, verbose):
         FH.write("%s=%s\n" % (k, v))
     FH.close()
        
-    #json.dump(dict(outdict), open(outFile, "w"))       
-    #if verbose: 
-    #   outFile = prefixOut + "_RMsynth.json"
-    #   print("> %s" % outFile)
-
+    
+    if verbose: 
+       outFile = prefixOut + "_RMsynth.json"
+       print("> %s" % outFile)
+    json.dump(dict(outdict), open(outFile, "w"))       
 
 
 

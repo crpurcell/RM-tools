@@ -5,7 +5,7 @@
 #                                                                             #
 # PURPOSE:  Run RM-clean on a dirty Faraday dispersion function.              #
 #                                                                             #
-# MODIFIED: 29-Sep-2017 by C. Purcell                                         #
+# MODIFIED: 16-Nov-2018 by J. West                                            #
 #                                                                             #
 #=============================================================================#
 #                                                                             #
@@ -37,14 +37,9 @@ import sys
 import os
 import time
 import argparse
-import json
-import math as m
-import numpy as np
+import pdb
 
-from RMutils.util_RM import do_rmclean
-from RMutils.util_RM import do_rmclean_hogbom
-from RMutils.util_RM import measure_FDF_parms
-from RMutils.util_RM import measure_fdf_complexity
+import cl_RMclean_1D as clRM
 
 C = 2.997924538e8 # Speed of light [m/s]
 
@@ -87,170 +82,28 @@ def main():
     rmsfFile = fileRoot + "_RMSF.dat"
     weightFile = fileRoot + "_weight.dat"
     rmSynthFile = fileRoot + "_RMsynth.json"
-
     # Sanity checks
     for f in [weightFile, fdfFile, rmsfFile, rmSynthFile]:
         if not os.path.exists(f):
-            print("File does not exist: '%s'." % f)
+            print("File does not exist: '%s'.", end=' ')
+            f
             sys.exit()
+    nBits = 32
     dataDir, dummy = os.path.split(args.dataFile[0])
-    
+    mDictS, aDict = clRM.readFiles(fdfFile, rmsfFile, weightFile, rmSynthFile, nBits)  
     # Run RM-CLEAN on the spectrum
-    run_rmclean(fdfFile      = fdfFile,
-                rmsfFile     = rmsfFile,
-                weightFile   = weightFile,
-                rmSynthFile  = rmSynthFile,
+    clRM.run_rmclean(mDictS  = mDictS,
+                aDict        = aDict,
                 cutoff       = args.cutoff,
                 maxIter      = args.maxIter,
                 gain         = args.gain,
                 prefixOut    = fileRoot,
                 outDir       = dataDir,
-                nBits        = 32,
+                nBits        = nBits,
                 showPlots    = args.showPlots,
                 doAnimate    = args.doAnimate)
     
 
-#-----------------------------------------------------------------------------#
-def run_rmclean(fdfFile, rmsfFile, weightFile, rmSynthFile, cutoff,
-                maxIter=1000, gain=0.1, prefixOut="", outDir="", nBits=32,
-                showPlots=False, doAnimate=False):
-    """
-    Run RM-CLEAN on a complex FDF spectrum given a RMSF.
-    """
-
-    # Default data types
-    dtFloat = "float" + str(nBits)
-    dtComplex = "complex" + str(2*nBits)
-    
-    # Read the frequency vector for the lambda^2 array
-    freqArr_Hz, weightArr = np.loadtxt(weightFile, unpack=True, dtype=dtFloat)
-    lambdaSqArr_m2 = np.power(C/freqArr_Hz, 2.0)
- 
-    # Read the FDF from the ASCII file
-    phiArr_radm2, FDFreal, FDFimag = np.loadtxt(fdfFile, unpack=True,
-                                                dtype=dtFloat)
-    dirtyFDF = FDFreal + 1j * FDFimag
-    
-    # Read the RMSF from the ASCII file
-    phi2Arr_radm2, RMSFreal, RMSFimag = np.loadtxt(rmsfFile, unpack=True,
-                                                   dtype=dtFloat)
-    RMSFArr = RMSFreal + 1j * RMSFimag
-
-    # Read the RM-synthesis parameters from the JSON file
-    mDictS = json.load(open(rmSynthFile, "r"))
-
-    # If the cutoff is negative, assume it is a sigma level
-    print("Expected RMS noise = %.4g mJy/beam/rmsf"  % \
-        (mDictS["dFDFth_Jybm"]*1e3))
-    if cutoff<0:
-        print("Using a sigma cutoff of %.1f." % (-1 * cutoff), end=' ')
-        cutoff = -1 * mDictS["dFDFth_Jybm"] * cutoff
-        print("Absolute value = %.3g" % cutoff)
-    else:
-        print("Using an absolute cutoff of %.3g (%.1f x expected RMS)." % \
-            (cutoff, cutoff/mDictS["dFDFth_Jybm"]))
-
-    startTime = time.time()
-    
-    # Perform RM-clean on the spectrum
-    cleanFDF, ccArr, iterCountArr = \
-              do_rmclean_hogbom(dirtyFDF        = dirtyFDF,
-                                phiArr_radm2    = phiArr_radm2,
-                                RMSFArr         = RMSFArr,
-                                phi2Arr_radm2   = phi2Arr_radm2,
-                                fwhmRMSFArr     = np.array(mDictS["fwhmRMSF"]),
-                                cutoff          = cutoff,
-                                maxIter         = maxIter,
-                                gain            = gain,
-                                verbose         = False,
-                                doPlots         = showPlots,
-                                doAnimate       = doAnimate)
-    cleanFDF #/= 1e3
-    ccArr #/= 1e3
-
-    # ALTERNATIVE RM_CLEAN CODE ----------------------------------------------#
-    '''
-    cleanFDF, ccArr, fwhmRMSF, iterCount = \
-              do_rmclean(dirtyFDF     = dirtyFDF,
-                         phiArr       = phiArr_radm2,
-                         lamSqArr     = lamSqArr_m2,
-                         cutoff       = cutoff,
-                         maxIter      = maxIter,
-                         gain         = gain,
-                         weight       = weightArr,
-                         RMSFArr      = RMSFArr,
-                         RMSFphiArr   = phi2Arr_radm2,
-                         fwhmRMSF     = mDictS["fwhmRMSF"],
-                         doPlots      = True)
-    '''
-    #-------------------------------------------------------------------------#
-
-    endTime = time.time()
-    cputime = (endTime - startTime)
-    print("> RM-CLEAN completed in %.4f seconds." % cputime)
-    
-    # Measure the parameters of the deconvolved FDF
-    mDict = measure_FDF_parms(FDF         = cleanFDF,
-                              phiArr      = phiArr_radm2,
-                              fwhmRMSF    = mDictS["fwhmRMSF"],
-                              #dFDF        = mDictS["dFDFth_Jybm"],
-                              lamSqArr_m2 = lambdaSqArr_m2,
-                              lam0Sq      = mDictS["lam0Sq_m2"])
-    mDict["cleanCutoff"] = cutoff
-    mDict["nIter"] = int(iterCountArr)
-
-    # Measure the complexity of the clean component spectrum
-    mDict["mom2CCFDF"] = measure_fdf_complexity(phiArr = phiArr_radm2,
-                                                FDF = ccArr)
-    
-    # Save the deconvolved FDF and CC model to ASCII files
-    print("Saving the clean FDF and component model to ASCII files.")
-    outFile = prefixOut + "_FDFclean.dat"
-    print("> %s" % outFile)
-    np.savetxt(outFile, list(zip(phiArr_radm2, cleanFDF.real, cleanFDF.imag)))
-    outFile = prefixOut + "_FDFmodel.dat"
-    print("> %s" % outFile)
-    np.savetxt(outFile, list(zip(phiArr_radm2, ccArr)))
-
-    # Save the RM-clean measurements to a "key=value" text file
-    print("Saving the measurements on the FDF in 'key=val' and JSON formats.")
-    outFile = prefixOut + "_RMclean.dat"
-    print("> %s" % outFile)
-    FH = open(outFile, "w")
-    for k, v in mDict.items():
-        FH.write("%s=%s\n" % (k, v))
-    FH.close()
-    outFile = prefixOut + "_RMclean.json"
-    print("> %s" % outFile)
-    json.dump(mDict, open(outFile, "w"))
-
-    
-    # Print the results to the screen
-    print()
-    print('-'*80)
-    print('RESULTS:\n')
-    print('FWHM RMSF = %.4g rad/m^2' % (mDictS["fwhmRMSF"]))
-    
-    print('Pol Angle = %.4g (+/-%.4g) deg' % (mDict["polAngleFit_deg"],
-                                              mDict["dPolAngleFit_deg"]))
-    print('Pol Angle 0 = %.4g (+/-%.4g) deg' % (mDict["polAngle0Fit_deg"],
-                                                mDict["dPolAngle0Fit_deg"]))
-    print('Peak FD = %.4g (+/-%.4g) rad/m^2' % (mDict["phiPeakPIfit_rm2"],
-                                                mDict["dPhiPeakPIfit_rm2"]))
-    print('freq0_GHz = %.4g ' % (mDictS["freq0_Hz"]/1e9))
-    print('I freq0 = %.4g mJy/beam' % (mDictS["Ifreq0_mJybm"]))
-    print('Peak PI = %.4g (+/-%.4g) mJy/beam' % (mDict["ampPeakPIfit_Jybm"]*1e3,
-                                                mDict["dAmpPeakPIfit_Jybm"]*1e3))
-    print('QU Noise = %.4g mJy/beam' % (mDictS["dQU_Jybm"]*1e3))
-    print('FDF Noise (measure) = %.4g mJy/beam' % (mDict["dFDFms_Jybm"]*1e3))
-    print('FDF SNR = %.4g ' % (mDict["snrPIfit"]))
-    print()
-    print('-'*80)
-    
-    # Pause to display the figure
-    if showPlots or doAnimate:
-        print("Press <RETURN> to exit ...", end=' ')
-        input()
 
     
 #-----------------------------------------------------------------------------#

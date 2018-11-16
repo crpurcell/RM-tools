@@ -102,7 +102,7 @@ def main():
     data = clRM.readFile(args.dataFile[0],nBits, verbose)
     
     # Run RM-synthesis on the spectra
-    dict = clRM.run_rmsynth(data           = data,
+    dict, aDict = clRM.run_rmsynth(data           = data,
                 polyOrd        = args.polyOrd,
                 phiMax_radm2   = args.phiMax_radm2,
                 dPhi_radm2     = args.dPhi_radm2,
@@ -116,7 +116,7 @@ def main():
                 verbose        = verbose)
     #pdb.set_trace()
     if args.saveOutput:
-        clRM.saveOutput(dict, prefixOut, verbose)
+        clRM.saveOutput(dict, aDict, prefixOut, verbose)
 
 
 #-----------------------------------------------------------------------------#
