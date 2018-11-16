@@ -5,7 +5,7 @@
 #                                                                             #
 # PURPOSE: API for runnning RM-synthesis on an ASCII Stokes I, Q & U spectrum.#
 #                                                                             #
-# MODIFIED: 6-Jul-2018 by J. West                                             #
+# MODIFIED: 16-Nov-2018 by J. West                                            #
 #                                                                             #
 #=============================================================================#
 #                                                                             #
@@ -98,7 +98,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
 
     # If no Stokes I present, create a dummy spectrum = unity
     if noStokesI:
-        if verbose: print("Warn: no Stokes I data in use.")
+        print("Warn: no Stokes I data in use.")
         IArr_Jy = np.ones_like(QArr_Jy)
         dIArr_Jy = np.zeros_like(QArr_Jy)
         
@@ -270,12 +270,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     mDict["fwhmRMSF"] = toscalar(fwhmRMSF)
     mDict["dQU_Jybm"] = toscalar(nanmedian(dQUArr_Jy))
     mDict["dFDFth_Jybm"] = toscalar(dFDFth_Jybm)
-    mDict["phiArr_radm2"] = phiArr_radm2
-    mDict["phi2Arr_radm2"] = phi2Arr_radm2
-    mDict["RMSFArr"] = RMSFArr
-    mDict["freqArr_Hz"] = freqArr_Hz
-    mDict["weightArr"]=weightArr
-    mDict["dirtyFDF"]=dirtyFDF
+
     
     #pdb.set_trace()
     # Measure the complexity of the q and u spectra
@@ -305,6 +300,14 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                      probuArr=pD["probArrU"],
                                      mDict=mDict)
         tmpFig.show()
+    
+    #add arrays at end of dictionary
+    mDict["phiArr_radm2"] = phiArr_radm2
+    mDict["phi2Arr_radm2"] = phi2Arr_radm2
+    mDict["RMSFArr"] = RMSFArr
+    mDict["freqArr_Hz"] = freqArr_Hz
+    mDict["weightArr"]=weightArr
+    mDict["dirtyFDF"]=dirtyFDF
     
     if verbose: 
        # Print the results to the screen
