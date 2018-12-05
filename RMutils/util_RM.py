@@ -86,7 +86,8 @@ C = 2.99792458e8
 
 #-----------------------------------------------------------------------------#
 def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2, 
-                      weightArr=None, lam0Sq_m2=None, nBits=32, verbose=False):
+                      weightArr=None, lam0Sq_m2=None, nBits=32, verbose=False,
+                      log=print):
     """Perform RM-synthesis on Stokes Q and U cubes (1,2 or 3D). This version
     of the routine loops through spectral planes and is faster than the pixel-
     by-pixel code. This version also correctly deals with isolated clumps of
@@ -115,19 +116,19 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
     
     # Sanity check on array sizes
     if not weightArr.shape  == lambdaSqArr_m2.shape:
-        print("Err: Lambda^2 and weight arrays must be the same shape.")
+        log("Err: Lambda^2 and weight arrays must be the same shape.")
         return None, None
     if not dataQ.shape == dataU.shape:
-        print("Err: Stokes Q and U data arrays must be the same shape.")
+        log("Err: Stokes Q and U data arrays must be the same shape.")
         return None, None
     nDims = len(dataQ.shape)
     if not nDims <= 3:
-        print("Err: data dimensions must be <= 3.")
+        log("Err: data dimensions must be <= 3.")
         return None, None
     if not dataQ.shape[0] == lambdaSqArr_m2.shape[0]:
-        print("Err: Data depth does not match lambda^2 vector (%d vs %d).", end=' ')
+        log("Err: Data depth does not match lambda^2 vector (%d vs %d).", end=' ')
         (dataQ.shape[0], lambdaSqArr_m2.shape[0])
-        print("     Check that data is in [z, y, x] order.")
+        log("     Check that data is in [z, y, x] order.")
         return None, None
     
     # Reshape the data arrays to 3 dimensions
@@ -173,7 +174,7 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
         
     # Do the RM-synthesis on each plane
     if verbose:
-        print("Running RM-synthesis by channel.")
+        log("Running RM-synthesis by channel.")
         progress(40, 0)
     a = lambdaSqArr_m2 - lam0Sq_m2
     for i in range(nPhi):
@@ -191,7 +192,8 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
 #-----------------------------------------------------------------------------#
 def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None, 
                     lam0Sq_m2=None, double=True, fitRMSF=False,
-                    fitRMSFreal=False, nBits=32, verbose=False):
+                    fitRMSFreal=False, nBits=32, verbose=False,
+                    log=print):
     """Calculate the Rotation Measure Spread Function from inputs. This version
     returns a cube (1, 2 or 3D) of RMSF spectra based on the shape of a
     boolean mask array, where flagged data are True and unflagged data False.
@@ -244,15 +246,15 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
     
     # Sanity checks on array sizes
     if not weightArr.shape  == lambdaSqArr_m2.shape:
-        print("Err: wavelength^2 and weight arrays must be the same shape.")
+        log("Err: wavelength^2 and weight arrays must be the same shape.")
         return None, None, None, None
     if not nDims <= 3:
-        print("Err: mask dimensions must be <= 3.")
+        log("Err: mask dimensions must be <= 3.")
         return None, None, None, None
     if not mskArr.shape[0] == lambdaSqArr_m2.shape[0]:
-        print("Err: mask depth does not match lambda^2 vector (%d vs %d).", end=' ')
+        log("Err: mask depth does not match lambda^2 vector (%d vs %d).", end=' ')
         (mskArr.shape[0], lambdaSqArr_m2.shape[-1])
-        print("     Check that the mask is in [z, y, x] order.")
+        log("     Check that the mask is in [z, y, x] order.")
         return None, None, None, None
     
     # Reshape the mask array to 3 dimensions
@@ -302,7 +304,7 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
     # Do a simple 1D calculation and replicate along X & Y axes
     if do1Dcalc:
         if verbose:
-            print("Calculating 1D RMSF and replicating along X & Y axes.")
+            log("Calculating 1D RMSF and replicating along X & Y axes.")
 
         # Calculate the RMSF
         a = (-2.0 * 1j * phi2Arr).astype(dtComplex)
@@ -313,15 +315,15 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
         fitStatus = -1
         if fitRMSF:
             if verbose:
-                print("Fitting Gaussian to the main lobe.")
+                log("Fitting Gaussian to the main lobe.")
             if fitRMSFreal:
                 mp = fit_rmsf(phi2Arr, RMSFcube.real)
             else:
                 mp = fit_rmsf(phi2Arr, np.abs(RMSFArr))
             if mp is None or mp.status<1:
                  pass
-                 print("Err: failed to fit the RMSF.")
-                 print("     Defaulting to analytical value.")
+                 log("Err: failed to fit the RMSF.")
+                 log("     Defaulting to analytical value.")
             else:
                 fwhmRMSF = mp.params[2]
                 fitStatus = mp.status
@@ -334,7 +336,7 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
     # Calculate the RMSF at each pixel
     else:
         if verbose:
-            print("Calculating RMSF by channel.")
+            log("Calculating RMSF by channel.")
 
         # The K value used to scale each RMSF must take into account
         # isolated flagged voxels data in the datacube
@@ -361,8 +363,8 @@ def get_rmsf_planes(lambdaSqArr_m2, phiArr_radm2, weightArr=None, mskArr=None,
         # Fit the RMSF main lobe
         if fitRMSF:
             if verbose:
-                print("Fitting main lobe in each RMSF spectrum.")
-                print("> This may take some time!")
+                log("Fitting main lobe in each RMSF spectrum.")
+                log("> This may take some time!")
             progress(40, 0)
             k = 0
             for i in range(nX):

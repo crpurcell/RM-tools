@@ -67,7 +67,7 @@ C = 2.997924538e8 # Speed of light [m/s]
 def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None, 
                 nSamples=10.0, weightType="variance", fitRMSF=False,
                 noStokesI=False, phiNoise_radm2=1e6, nBits=32, showPlots=False,
-                debug=False, verbose=False):
+                debug=False, verbose=False, log=print):
     """
     Read the I, Q & U data and run RM-synthesis.
     """
@@ -78,27 +78,27 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
 
     # freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy
     try:
-        if verbose: print("> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]", end=' ')
+        if verbose: log("> Trying [freq_Hz, I_Jy, Q_Jy, U_Jy, dI_Jy, dQ_Jy, dU_Jy]", end=' ')
         (freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy, dIArr_Jy, dQArr_Jy, dUArr_Jy) = data 
-        if verbose: print("... success.")
+        if verbose: log("... success.")
     except Exception:
-        if verbose: print("...failed.")
+        if verbose: log("...failed.")
         # freq_Hz, q_Jy, u_Jy, dq_Jy, du_Jy
         try:
-            if verbose: print("> Trying [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]", end=' ')
+            if verbose: log("> Trying [freq_Hz, q_Jy, u_Jy,  dq_Jy, du_Jy]", end=' ')
             (freqArr_Hz, QArr_Jy, UArr_Jy, dQArr_Jy, dUArr_Jy) = data 
-            if verbose: print("... success.")
+            if verbose: log("... success.")
             noStokesI = True
         except Exception:
-            if verbose: print("...failed.")
+            if verbose: log("...failed.")
             if debug:
-                print(traceback.format_exc())
+                log(traceback.format_exc())
             sys.exit()
-    if verbose: print("Successfully read in the Stokes spectra.")
+    if verbose: log("Successfully read in the Stokes spectra.")
 
     # If no Stokes I present, create a dummy spectrum = unity
     if noStokesI:
-        print("Warn: no Stokes I data in use.")
+        log("Warn: no Stokes I data in use.")
         IArr_Jy = np.ones_like(QArr_Jy)
         dIArr_Jy = np.zeros_like(QArr_Jy)
         
@@ -128,7 +128,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
 
     # Plot the data and the Stokes I model fit
     if showPlots:
-        if verbose: print("Plotting the input data and spectral index fit.")
+        if verbose: log("Plotting the input data and spectral index fit.")
         freqHirArr_Hz =  np.linspace(freqArr_Hz[0], freqArr_Hz[-1], 10000)     
         IModHirArr_mJy = poly5(fitDict["p"])(freqHirArr_Hz/1e9)    
         specFig = plt.figure(figsize=(12.0, 8))
@@ -195,7 +195,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     stopPhi_radm2 = + (nChanRM-1.0) * dPhi_radm2 / 2.0
     phiArr_radm2 = np.linspace(startPhi_radm2, stopPhi_radm2, nChanRM)
     phiArr_radm2 = phiArr_radm2.astype(dtFloat)
-    if verbose: print("PhiArr = %.2f to %.2f by %.2f (%d chans)." % (phiArr_radm2[0],
+    if verbose: log("PhiArr = %.2f to %.2f by %.2f (%d chans)." % (phiArr_radm2[0],
                                                          phiArr_radm2[-1],
                                                          float(dPhi_radm2),
                                                          nChanRM))
@@ -206,7 +206,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     else:
         weightType = "natural"
         weightArr = np.ones(freqArr_Hz.shape, dtype=dtFloat)
-    if verbose: print("Weight type is '%s'." % weightType)
+    if verbose: log("Weight type is '%s'." % weightType)
 
     startTime = time.time()
     
@@ -217,7 +217,8 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                             phiArr_radm2    = phiArr_radm2, 
                                             weightArr       = weightArr,
                                             nBits           = nBits,
-                                            verbose         = True)
+                                            verbose         = True,
+                                            log             = log)
 
     # Calculate the Rotation Measure Spread Function
     RMSFArr, phi2Arr_radm2, fwhmRMSFArr, fitStatArr = \
@@ -230,7 +231,8 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                         fitRMSF         = fitRMSF, 
                         fitRMSFreal     = False, 
                         nBits           = nBits,
-                        verbose         = True)
+                        verbose         = True,
+                        log             = log)
     fwhmRMSF = float(fwhmRMSFArr)
     
     # ALTERNATE RM-SYNTHESIS CODE --------------------------------------------#
@@ -242,7 +244,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     
     endTime = time.time()
     cputime = (endTime - startTime)
-    if verbose: print("> RM-synthesis completed in %.2f seconds." % cputime)
+    if verbose: log("> RM-synthesis completed in %.2f seconds." % cputime)
     
     # Determine the Stokes I value at lam0Sq_m2 from the Stokes I model
     # Multiply the dirty FDF by Ifreq0 to recover the PI in Jy
@@ -312,32 +314,32 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     
     if verbose: 
        # Print the results to the screen
-       print()
-       print('-'*80)
-       print('RESULTS:\n')
-       print('FWHM RMSF = %.4g rad/m^2' % (mDict["fwhmRMSF"]))
+       log()
+       log('-'*80)
+       log('RESULTS:\n')
+       log('FWHM RMSF = %.4g rad/m^2' % (mDict["fwhmRMSF"]))
     
-       print('Pol Angle = %.4g (+/-%.4g) deg' % (mDict["polAngleFit_deg"],
+       log('Pol Angle = %.4g (+/-%.4g) deg' % (mDict["polAngleFit_deg"],
                                               mDict["dPolAngleFit_deg"]))
-       print('Pol Angle 0 = %.4g (+/-%.4g) deg' % (mDict["polAngle0Fit_deg"],
+       log('Pol Angle 0 = %.4g (+/-%.4g) deg' % (mDict["polAngle0Fit_deg"],
                                                 mDict["dPolAngle0Fit_deg"]))
-       print('Peak FD = %.4g (+/-%.4g) rad/m^2' % (mDict["phiPeakPIfit_rm2"],
+       log('Peak FD = %.4g (+/-%.4g) rad/m^2' % (mDict["phiPeakPIfit_rm2"],
                                                 mDict["dPhiPeakPIfit_rm2"]))
-       print('freq0_GHz = %.4g ' % (mDict["freq0_Hz"]/1e9))
-       print('I freq0 = %.4g mJy/beam' % (mDict["Ifreq0_mJybm"]))
-       print('Peak PI = %.4g (+/-%.4g) mJy/beam' % (mDict["ampPeakPIfit_Jybm"]*1e3,
+       log('freq0_GHz = %.4g ' % (mDict["freq0_Hz"]/1e9))
+       log('I freq0 = %.4g mJy/beam' % (mDict["Ifreq0_mJybm"]))
+       log('Peak PI = %.4g (+/-%.4g) mJy/beam' % (mDict["ampPeakPIfit_Jybm"]*1e3,
                                                 mDict["dAmpPeakPIfit_Jybm"]*1e3))
-       print('QU Noise = %.4g mJy/beam' % (mDict["dQU_Jybm"]*1e3))
-       print('FDF Noise (theory)   = %.4g mJy/beam' % (mDict["dFDFth_Jybm"]*1e3))
-       print('FDF SNR = %.4g ' % (mDict["snrPIfit"]))
-       print('sigma_add(q) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddQ"],
+       log('QU Noise = %.4g mJy/beam' % (mDict["dQU_Jybm"]*1e3))
+       log('FDF Noise (theory)   = %.4g mJy/beam' % (mDict["dFDFth_Jybm"]*1e3))
+       log('FDF SNR = %.4g ' % (mDict["snrPIfit"]))
+       log('sigma_add(q) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddQ"],
                                             mDict["dSigmaAddPlusQ"],
                                             mDict["dSigmaAddMinusQ"]))
-       print('sigma_add(u) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddU"],
+       log('sigma_add(u) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddU"],
                                             mDict["dSigmaAddPlusU"],
                                             mDict["dSigmaAddMinusU"]))
-       print()
-       print('-'*80)
+       log()
+       log('-'*80)
     
 
     # Plot the RM Spread Function and dirty FDF
