@@ -500,29 +500,29 @@ def plot_q_vs_u_ax(ax, lamSqArr_m2, qArr, uArr, dqArr=None, duArr=None,
         ax.xaxis.set_label_position("top")    
 
     # Plot u versus q
-    ax.errorbar(x=uArr, y=qArr, xerr=duArr, yerr=dqArr, mec="grey", mfc="none",
+    ax.errorbar(x=qArr, y=uArr, xerr=dqArr, yerr=duArr, mec="grey", mfc="none",
                 ms=1, fmt=".", ecolor="grey", elinewidth=1.0, capsize=2,
                 zorder=1)
     freqArr_Hz = C/np.sqrt(lamSqArr_m2)
-    ax.scatter(x=uArr, y=qArr, c=freqArr_Hz, cmap="jet_r", s=30,
+    ax.scatter(x=qArr, y=uArr, c=freqArr_Hz, cmap="jet_r", s=30,
                marker="D", edgecolor="none", linewidth=0.5, zorder=2)
 
     # Plot the model
     if qModArr is not None and uModArr is not None:
-        ax.plot(uModArr, qModArr, color="k", lw=2.5, label='Model q & u',
+        ax.plot(qModArr, uModArr, color="k", lw=2.5, label='Model q & u',
                 zorder=2)
     
     # Formatting
     ax.yaxis.set_major_locator(MaxNLocator(4))
     ax.xaxis.set_major_locator(MaxNLocator(4))
-    xRange = np.nanmax(uArr)-np.nanmin(uArr)
-    ax.set_xlim( np.nanmin(uArr) - xRange*0.05,
-                 np.nanmax(uArr) + xRange*0.05)
-    yRange = np.nanmax(qArr)-np.nanmin(qArr)
-    ax.set_ylim( np.nanmin(qArr) - yRange*0.05,
-                 np.nanmax(qArr) + yRange*0.05)
-    ax.set_xlabel('Stokes u')
-    ax.set_ylabel('Stokes q')
+    xRange = np.nanmax(qArr)-np.nanmin(qArr)
+    ax.set_xlim( np.nanmin(qArr) - xRange*0.05,
+                 np.nanmax(qArr) + xRange*0.05)
+    yRange = np.nanmax(uArr)-np.nanmin(uArr)
+    ax.set_ylim( np.nanmin(uArr) - yRange*0.05,
+                 np.nanmax(uArr) + yRange*0.05)
+    ax.set_xlabel('Stokes q')
+    ax.set_ylabel('Stokes u')
     ax.axhline(0, color='grey')
     ax.axvline(0, color='grey')
     

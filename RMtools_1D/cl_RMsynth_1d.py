@@ -144,14 +144,15 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                               fig            = specFig)
 
         # Use the custom navigation toolbar (does not work on Mac OS X)
-        try:
-            specFig.canvas.toolbar.pack_forget()
-            CustomNavbar(specFig.canvas, specFig.canvas.toolbar.window)
-        except Exception:
-            pass
+#        try:
+#            specFig.canvas.toolbar.pack_forget()
+#            CustomNavbar(specFig.canvas, specFig.canvas.toolbar.window)
+#        except Exception:
+#            pass
 
         # Display the figure
-        specFig.show()
+#        if not plt.isinteractive():
+#            specFig.show()
 
         # DEBUG (plot the Q, U and average RMS spectrum)
         if debug:
@@ -169,7 +170,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
             ax.set_xlabel('$\\nu$ (GHz)')
             ax.set_ylabel('RMS (mJy bm$^{-1}$)')
             ax.set_title("RMS noise in Stokes Q, U and <Q,U> spectra")
-            rmsFig.show()
+#            rmsFig.show()
 
     #-------------------------------------------------------------------------#
 
@@ -354,19 +355,19 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                           fig        = fdfFig)
 
         # Use the custom navigation toolbar
-        try:
-            fdfFig.canvas.toolbar.pack_forget()
-            CustomNavbar(fdfFig.canvas, fdfFig.canvas.toolbar.window)
-        except Exception:
-            pass
+#        try:
+#            fdfFig.canvas.toolbar.pack_forget()
+#            CustomNavbar(fdfFig.canvas, fdfFig.canvas.toolbar.window)
+#        except Exception:
+#            pass
         
         # Display the figure
-        fdfFig.show()
+#        fdfFig.show()
 
     # Pause if plotting enabled
-    if showPlots or debug:        
-        #if verbose: print "Press <RETURN> to exit ...",
-        input()
+#    if showPlots or debug:        
+#        #if verbose: print "Press <RETURN> to exit ...",
+#        input()
 
     return mDict, aDict
     
