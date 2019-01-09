@@ -37,7 +37,6 @@ import sys
 import os
 import time
 import argparse
-import pdb
 
 import cl_RMclean_1D as clRM
 
