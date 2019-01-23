@@ -99,7 +99,7 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
     dataU           ... 1, 2 or 3D Stokes U data array
     lambdaSqArr_m2  ... vector of wavelength^2 values (assending freq order)
     phiArr_radm2    ... vector of trial Faraday depth values
-    weightArr       ... vector of weights, default [None] is Natural (all 1s)
+    weightArr       ... vector of weights, default [None] is Uniform (all 1s)
     nBits           ... precision of data arrays [32]
     verbose         ... print feedback during calculation [False]
     
@@ -790,13 +790,15 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
     absFDFmsked[iL:iR] = np.nan
     absFDFmsked = absFDFmsked[np.where(absFDFmsked==absFDFmsked)]
     if float(len(absFDFmsked))/len(absFDF)<0.3:
-        dFDFms_Jybm = MAD(absFDF)
+        dFDFcorMAD_Jybm = MAD(absFDF)
+        dFDFrms_Jybm = np.sqrt( np.mean(absFDF**2) )
     else:
-        dFDFms_Jybm = MAD(absFDFmsked)
+        dFDFcorMAD_Jybm = MAD(absFDFmsked)
+        dFDFrms_Jybm = np.sqrt( np.mean(absFDFmsked**2) )
 
     # Default to using the measured FDF if a noise value has not been provided
     if dFDF is None:
-        dFDF = dFDFms_Jybm
+        dFDF = dFDFcorMAD_Jybm
     
     # Measure the RM of the peak channel
     phiPeakPIchan = phiArr[indxPeakPIchan]
@@ -813,7 +815,7 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
     peakFDFrealChan = FDF.real[indxPeakPIchan]
     polAngleChan_deg = 0.5 * np.degrees(np.arctan2(peakFDFimagChan,
                                          peakFDFrealChan))
-    dPolAngleChan_deg = np.degrees(dFDF**2.0 / (4.0 * ampPeakPIchan**2.0))
+    dPolAngleChan_deg = np.degrees(dFDF / (2.0 * ampPeakPIchan))
 
     # Calculate the derotated polarisation angle and uncertainty
     polAngle0Chan_deg = np.degrees(np.radians(polAngleChan_deg) -
@@ -831,7 +833,6 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
     phiPeakPIfit = None
     dPhiPeakPIfit = None
     ampPeakPIfit = None
-    dAmpPeakPIfit = None
     snrPIfit = None
     ampPeakPIfitEff = None
     indxPeakPIfit = None
@@ -854,14 +855,9 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
         
         snrPIfit = ampPeakPIfit / dFDF
         
-        # Error on fitted Faraday depth (RM) from Eqn 4b in Landman 1982
-        # Parabolic interpolation is approximately equivalent to a Gaussian fit
-        dPhiPeakPIfit = (np.sqrt(fwhmRMSF * dPhi) /
-                         np.power(2.0*np.pi*np.log(2.0), 0.25) / snrPIfit)
+        # Error on fitted Faraday depth (RM) is same as channel, but using fitted PI
+        dPhiPeakPIfit = fwhmRMSF * dFDF / (2.0 * ampPeakPIfit)
         
-        # Error on fitted peak intensity (PI) from Eqn 4a in Landman 1982
-        dAmpPeakPIfit = (np.power(18.0*np.log(2.0)/(np.pi), 0.25) *
-                         np.sqrt(dPhi) * dFDF / np.sqrt(fwhmRMSF))
         
         # Correct the peak for polarisation bias (POSSUM report 11)
         ampPeakPIfitEff = ampPeakPIfit
@@ -876,7 +872,7 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
         peakFDFrealFit = np.interp(phiPeakPIfit, phiArr, FDF.real)
         polAngleFit_deg = 0.5 * np.degrees(np.arctan2(peakFDFimagFit,
                                                   peakFDFrealFit))
-        dPolAngleFit_deg = np.degrees(dFDF**2.0 / (4.0 * ampPeakPIfit**2.0))
+        dPolAngleFit_deg = np.degrees(dFDF / (2.0 * ampPeakPIfit))
 
         # Calculate the derotated polarisation angle and uncertainty
         # Uncertainty from Eqn A.20 in Brentjens & De Bruyn 2005
@@ -888,7 +884,8 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
         dPolAngle0Fit_deg = np.degrees(dPolAngle0Fit_rad)
 
     # Store the measurements in a dictionary and return
-    mDict = {'dFDFms_Jybm':           toscalar(dFDFms_Jybm),
+    mDict = {'dFDFcorMAD_Jybm':       toscalar(dFDFcorMAD_Jybm),
+             'dFDFrms_Jybm':          toscalar(dFDFrms_Jybm),
              'phiPeakPIchan_rm2':     toscalar(phiPeakPIchan),
              'dPhiPeakPIchan_rm2':    toscalar(dPhiPeakPIchan),
              'ampPeakPIchan_Jybm':    toscalar(ampPeakPIchan),
@@ -906,7 +903,7 @@ def measure_FDF_parms(FDF, phiArr, fwhmRMSF, dFDF=None, lamSqArr_m2=None,
              'dPhiPeakPIfit_rm2':     toscalar(dPhiPeakPIfit),
              'ampPeakPIfit_Jybm':     toscalar(ampPeakPIfit),
              'ampPeakPIfitEff_Jybm':  toscalar(ampPeakPIfitEff),
-             'dAmpPeakPIfit_Jybm':    toscalar(dAmpPeakPIfit),
+             'dAmpPeakPIfit_Jybm':    toscalar(dFDF),
              'snrPIfit':              toscalar(snrPIfit),
              'indxPeakPIfit':         toscalar(indxPeakPIfit),
              'peakFDFimagFit':        toscalar(peakFDFimagFit),
@@ -1314,10 +1311,10 @@ def get_RMSF(lamSqArr, phiArr, weightArr=None, lam0Sq_m2=None, double=True,
 
     # Set the weight array
     if weightArr is None:
-        naturalWt = True
+        uniformWt = True
         weightArr = np.ones(lamSqArr.shape, dtype=dtype)
     else:
-        naturalWt = False
+        uniformWt = False
         weightArr = np.array(weightArr, dtype=dtype)
             
     # lam0Sq is the weighted mean of the LambdaSq distribution (B&dB Eqn. 32)
@@ -1341,7 +1338,7 @@ def get_RMSF(lamSqArr, phiArr, weightArr=None, lam0Sq_m2=None, double=True,
 
     # Calculate (B&dB Equation 61) or fit the main-lobe FWHM of the RMSF
     fwhmRMSF = 2.0 * m.sqrt(3.0)/(np.nanmax(lamSqArr) - np.nanmin(lamSqArr))
-    if not naturalWt:
+    if not uniformWt:
         if fitRMSFreal:
             mp = fit_rmsf(phi2Arr, RMSFArr.real)
         else:
@@ -1349,7 +1346,7 @@ def get_RMSF(lamSqArr, phiArr, weightArr=None, lam0Sq_m2=None, double=True,
         if mp is None or mp.status<1:
             pass
             print("Err: failed to fit the RMSF.")
-            print("Defaulting to analytical value in natural case.")
+            print("Defaulting to analytical value in uniform case.")
         else:
             fwhmRMSF = mp.params[2]
             
@@ -1435,14 +1432,14 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
         if mp is None or mp.status<1:
             pass
             print('Err: failed to fit the RMSF.')
-            print("Defaulting to analytical value in natural case.")
+            print("Defaulting to analytical value in uniform case.")
         else:
             fwhmRMSF = mp.params[2]
     
     # If the weight array has been passed in ...
     if not weight is None:
         
-        naturalWt = False
+        uniformWt = False
         weightArr = np.array(weight, dtype=dtype)
     
         # Check weightArr and lamSqArr have the same length
@@ -1450,9 +1447,9 @@ def do_rmclean(dirtyFDF, phiArr, lamSqArr, cutoff, maxIter=1000, gain=0.1,
             print('Err: the lamSqArr and weightArr are not the same length.')
             sys.exit(1)
             
-    # or else use natural weighting
+    # or else use uniform weighting
     else:
-        naturalWt = True
+        uniformWt = True
         weightArr = np.ones(lamSqArr.shape, dtype=dtype)
 
     if doPlots:
@@ -1690,7 +1687,7 @@ def threeDnoise_do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
     dataU           ... 1, 2 or 3D Stokes U data array
     lambdaSqArr_m2  ... vector of wavelength^2 values (assending freq order)
     phiArr_radm2    ... vector of trial Faraday depth values
-    weightArr       ... 1, 2 or 3D array of weights, default [None] is Natural (all 1s)
+    weightArr       ... 1, 2 or 3D array of weights, default [None] is Uniform (all 1s)
     nBits           ... precision of data arrays [32]
     verbose         ... print feedback during calculation [False]
     

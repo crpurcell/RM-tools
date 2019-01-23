@@ -71,7 +71,7 @@ def main():
     parser.add_argument("-s", dest="nSamples", type=float, default=10,
                         help="number of samples across the RMSF lobe [10].")
     parser.add_argument("-w", dest="weightType", default="variance",
-                        help="weighting [variance] or 'natural' (all 1s).")
+                        help="weighting [variance] or 'uniform' (all 1s).")
     parser.add_argument("-o", dest="polyOrd", type=int, default=2,
                         help="polynomial order to fit to I spectrum [2].")
     parser.add_argument("-i", dest="noStokesI", action="store_true",

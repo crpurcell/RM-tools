@@ -78,8 +78,8 @@ def main():
                         help="FITS cube containing Stokes I model [None].")
     parser.add_argument("-n", dest="noiseFile", default=None,
                         help="ASCII file containing RMS noise values [None].")
-    parser.add_argument("-w", dest="weightType", default="natural",
-                        help="weighting [natural] (all 1s) or 'variance'.")
+    parser.add_argument("-w", dest="weightType", default="uniform",
+                        help="weighting [uniform] (all 1s) or 'variance'.")
     parser.add_argument("-t", dest="fitRMSF", action="store_true",
                         help="Fit a Gaussian to the RMSF [False]")
     parser.add_argument("-l", dest="phiMax_radm2", type=float, default=None,
@@ -118,7 +118,7 @@ def main():
 #-----------------------------------------------------------------------------#
 def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
                 phiMax_radm2=None, dPhi_radm2=None, nSamples=10.0,
-                weightType="natural", prefixOut="", outDir="",
+                weightType="uniform", prefixOut="", outDir="",
                 fitRMSF=False, nBits=32):
     """Read the Q & U data from the given files and run RM-synthesis."""
     
@@ -192,11 +192,11 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     if noiseFile is not None and os.path.exists(noiseFile):
         rmsArr_Jy = np.loadtxt(noiseFile, dtype=dtFloat)
         
-    # Calculate the weighting as 1/sigma^2 or all 1s (natural)
+    # Calculate the weighting as 1/sigma^2 or all 1s (uniform)
     if weightType=="variance" and rmsArr_Jy is not None:
         weightArr = 1.0 / np.power(rmsArr_Jy, 2.0)
     else:
-        weightType = "natural"
+        weightType = "uniform"
         weightArr = np.ones(freqArr_Hz.shape, dtype=dtFloat)    
     print("Weight type is '%s'." % weightType)
 

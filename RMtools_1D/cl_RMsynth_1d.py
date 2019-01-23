@@ -201,11 +201,11 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                                          float(dPhi_radm2),
                                                          nChanRM))
                                                              
-    # Calculate the weighting as 1/sigma^2 or all 1s (natural)
+    # Calculate the weighting as 1/sigma^2 or all 1s (uniform)
     if weightType=="variance":
         weightArr = 1.0 / np.power(dQUArr_mJy, 2.0)
     else:
-        weightType = "natural"
+        weightType = "uniform"
         weightArr = np.ones(freqArr_Hz.shape, dtype=dtFloat)
     if verbose: log("Weight type is '%s'." % weightType)
 
@@ -253,8 +253,10 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     Ifreq0_mJybm = poly5(fitDict["p"])(freq0_Hz/1e9)
     dirtyFDF *= (Ifreq0_mJybm / 1e3)    # FDF is in Jy 
 
-    # Calculate the theoretical noise in the FDF
-    dFDFth_Jybm = np.sqrt(1./np.sum(1./dQUArr_Jy**2.)) 
+    # Calculate the theoretical noise in the FDF !!Old formula only works for wariance weights!
+    #dFDFth_Jybm = np.sqrt(1./np.sum(1./dQUArr_Jy**2.)) 
+    dFDFth_Jybm = np.sqrt( np.sum(weightArr**2 * dQUArr_Jy**2) / (np.sum(weightArr))**2 )
+    
     
     # Measure the parameters of the dirty FDF
     # Use the theoretical noise to calculate uncertainties
@@ -332,6 +334,8 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                                 mDict["dAmpPeakPIfit_Jybm"]*1e3))
        log('QU Noise = %.4g mJy/beam' % (mDict["dQU_Jybm"]*1e3))
        log('FDF Noise (theory)   = %.4g mJy/beam' % (mDict["dFDFth_Jybm"]*1e3))
+       log('FDF Noise (Corrected MAD) = %.4g mJy/beam' % (mDict["dFDFcorMAD_Jybm"]*1e3))
+       log('FDF Noise (rms)   = %.4g mJy/beam' % (mDict["dFDFrms_Jybm"]*1e3))
        log('FDF SNR = %.4g ' % (mDict["snrPIfit"]))
        log('sigma_add(q) = %.4g (+%.4g, -%.4g)' % (mDict["sigmaAddQ"],
                                             mDict["dSigmaAddPlusQ"],
