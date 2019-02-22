@@ -494,8 +494,8 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
     if mskArr is not None:
         if not mskArr.shape==dirtyFDF.shape[1:]:
             print("Err: pixel mask must match xy dimesnisons of FDF cube.")
-            print("     FDF[z,y,z] = %s, Mask[y,x] = %s.", end=' ')
-            (dirtyFDF.shape, mskArr.shape)
+            print("     FDF[z,y,z] = {:}, Mask[y,x] = {:}.".format(dirtyFDF.shape, mskArr.shape), end=' ')
+            
             return None, None, None
     else:
         mskArr = np.ones(dirtyFDF.shape[1:], dtype="bool") 
@@ -522,8 +522,8 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
     if verbose:
         nPix = dirtyFDF.shape[-1]* dirtyFDF.shape[-2]
         nCleanPix = len(xyCoords)
-        print("Cleaning %d/%d spectra.", end=' ')
-        (nCleanPix, nPix)
+        print("Cleaning {:}/{:} spectra.".format(nCleanPix, nPix), end=' ')
+        
     
     # Initialise arrays to hold the residual FDF, clean components, clean FDF
     residFDF = dirtyFDF.copy()
@@ -599,8 +599,6 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
                                 residFDF,
                                 cutoff)
 
-        # Restore the residual to the CLEANed FDF
-        cleanFDF[:, yi, xi] += residFDF[:, yi, xi]
 
         if doPlots:
             plot_clean_spec(ax1,
@@ -612,6 +610,11 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
                             cutoff)
             ax1.lines[2].remove()
             plt.draw()
+
+    # Restore the residual to the CLEANed FDF (moved outside of loop: 
+        #will now work for pixels/spectra without clean components)
+    cleanFDF += residFDF
+
 
     # Remove redundant dimensions
     cleanFDF = np.squeeze(cleanFDF)

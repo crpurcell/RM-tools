@@ -143,17 +143,32 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
     cputime = (endTime - startTime)
     print("> RM-clean completed in %.2f seconds." % cputime)
     print("Saving the clean FDF and ancillary FITS files")
-    
+
+
+    if outDir=='':  #To prevent code breaking if file is in current directory
+        outDir='.'
+
     # Save the clean FDF
     fitsFileOut = outDir + "/" + prefixOut + "FDF_clean.fits"
     print("> %s" % fitsFileOut)
     hdu0 = pf.PrimaryHDU(cleanFDF.real.astype(dtFloat), head)
     hdu1 = pf.ImageHDU(cleanFDF.imag.astype(dtFloat), head)
     hdu2 = pf.ImageHDU(np.abs(cleanFDF).astype(dtFloat), head)
-    hdu3 = pf.ImageHDU(ccArr.astype(dtFloat), head)
-    hduLst = pf.HDUList([hdu0, hdu1, hdu2, hdu3])
-    hduLst.writeto(fitsFileOut, output_verify="fix", clobber=True)
+#    hdu3 = pf.ImageHDU(ccArr.astype(dtFloat), head)
+    hduLst = pf.HDUList([hdu0, hdu1, hdu2])
+    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
     hduLst.close()
+    
+    #Save the complex clean components as another file.
+    fitsFileOut = outDir + "/" + prefixOut + "FDF_CC.fits"
+    print("> %s" % fitsFileOut)
+    hdu0 = pf.PrimaryHDU(ccArr.real.astype(dtFloat), head)
+    hdu1 = pf.ImageHDU(ccArr.imag.astype(dtFloat), head)
+    hdu2 = pf.ImageHDU(np.abs(ccArr).astype(dtFloat), head)
+    hduLst = pf.HDUList([hdu0, hdu1, hdu2])
+    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+    hduLst.close()
+    
 
     # Save the iteration count mask
     fitsFileOut = outDir + "/" + prefixOut + "CLEAN_nIter.fits"
@@ -161,7 +176,7 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
     head["BUNIT"] = "Iterations"
     hdu0 = pf.PrimaryHDU(iterCountArr.astype(dtFloat), head)
     hduLst = pf.HDUList([hdu0])
-    hduLst.writeto(fitsFileOut, output_verify="fix", clobber=True)
+    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
     hduLst.close()
     
 

@@ -87,8 +87,7 @@ def main():
     # Sanity checks
     for f in [weightFile, fdfFile, rmsfFile, rmSynthFile]:
         if not os.path.exists(f):
-            print("File does not exist: '%s'.", end=' ')
-            f
+            print("File does not exist: '{:}'.".format(f), end=' ')
             sys.exit()
     nBits = 32
     dataDir, dummy = os.path.split(args.dataFile[0])

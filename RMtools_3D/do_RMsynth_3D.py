@@ -292,6 +292,9 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     if "DATAMIN" in header:
         del header["DATAMIN"]
 
+    if outDir=='':  #To prevent code breaking if file is in current directory
+        outDir='.'
+
     # Save the dirty FDF
     fitsFileOut = outDir + "/" + prefixOut + "FDF_dirty.fits"
     print("> %s" % fitsFileOut)
@@ -299,14 +302,14 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     hdu1 = pf.ImageHDU(FDFcube.imag.astype(dtFloat), header)
     hdu2 = pf.ImageHDU(np.abs(FDFcube).astype(dtFloat), header)
     hduLst = pf.HDUList([hdu0, hdu1, hdu2])
-    hduLst.writeto(fitsFileOut, output_verify="fix", clobber=True)
+    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
     hduLst.close()
     
     # Save a maximum polarised intensity map
     fitsFileOut = outDir + "/" + prefixOut + "FDF_maxPI.fits"
     print("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, np.max(np.abs(FDFcube), 0).astype(dtFloat), header,
-               clobber=True, output_verify="fix")
+               overwrite=True, output_verify="fix")
     
     # Save a peak RM map
     fitsFileOut = outDir + "/" + prefixOut + "FDF_peakRM.fits"
@@ -315,7 +318,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     peakFDFmap = header["CRVAL3"] + (peakFDFmap + 1
                                      - header["CRPIX3"]) * header["CDELT3"]
     print("> %s" % fitsFileOut)
-    pf.writeto(fitsFileOut, peakFDFmap, header, clobber=True,
+    pf.writeto(fitsFileOut, peakFDFmap, header, overwrite=True,
                output_verify="fix")
     
     # Save an RM moment-1 map
@@ -325,7 +328,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
                   /np.nansum(np.abs(FDFcube).transpose(1,2,0), 2))
     mom1FDFmap = mom1FDFmap.astype(dtFloat)
     print("> %s" % fitsFileOut)
-    pf.writeto(fitsFileOut, mom1FDFmap, header, clobber=True,
+    pf.writeto(fitsFileOut, mom1FDFmap, header, overwrite=True,
                output_verify="fix")
 
     # Save the RMSF
@@ -339,7 +342,7 @@ def run_rmsynth(fitsQ, fitsU, freqFile, fitsI=None, noiseFile=None,
     hdu3 = pf.ImageHDU(fwhmRMSFCube.astype(dtFloat), header)
     hduLst = pf.HDUList([hdu0, hdu1, hdu2, hdu3])
     print("> %s" % fitsFileOut)
-    hduLst.writeto(fitsFileOut, output_verify="fix", clobber=True)
+    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
     hduLst.close()
 
 
