@@ -87,7 +87,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.patches import Polygon
 from matplotlib.ticker import FuncFormatter
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import tkinter.ttk
 
 from .util_plotFITS import plot_fits_map
@@ -170,11 +170,11 @@ def format_ticks(ax, pad=10, w=1.0):
 
 
 #-----------------------------------------------------------------------------#
-class CustomNavbar(NavigationToolbar2TkAgg):
+class CustomNavbar(NavigationToolbar2Tk):
     """Custom navigation toolbar subclass"""
     
     def __init__(self, canvas, window):
-        NavigationToolbar2TkAgg.__init__(self, canvas, window)
+        NavigationToolbar2Tk.__init__(self, canvas, window)
         self.legStat = []
         for i in range(len(self.canvas.figure.axes)):
             ax = self.canvas.figure.axes[i]
@@ -184,7 +184,7 @@ class CustomNavbar(NavigationToolbar2TkAgg):
                 self.legStat.append(True)
         
     def _init_toolbar(self):
-        NavigationToolbar2TkAgg._init_toolbar(self)     
+        NavigationToolbar2Tk._init_toolbar(self)     
         
         # Add the legend toggle button
         self.legBtn = tkinter.ttk.Button(self, text="Hide Legend",
