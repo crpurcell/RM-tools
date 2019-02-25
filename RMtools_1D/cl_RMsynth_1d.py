@@ -369,8 +369,9 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
 #        fdfFig.show()
 
     # Pause if plotting enabled
-#    if showPlots or debug:        
-#        #if verbose: print "Press <RETURN> to exit ...",
+    if showPlots or debug:        
+        plt.show()
+        #        #if verbose: print "Press <RETURN> to exit ...",
 #        input()
 
     return mDict, aDict
