@@ -79,7 +79,7 @@ def main():
     parser.add_argument("-i", dest="fitsI", default=None,
                         help="FITS cube containing Stokes I model [None].")
     parser.add_argument("-n", dest="noiseFile", default=None,
-                        help="ASCII file containing RMS noise values [None].")
+                        help="FITS file or cube containing noise values [None].")
     parser.add_argument("-w", dest="weightType", default="uniform",
                         help="weighting [uniform] (all 1s) or 'variance'.")
     parser.add_argument("-t", dest="fitRMSF", action="store_true",
@@ -94,6 +94,9 @@ def main():
                         help="Number of samples across the FWHM RMSF.")
     parser.add_argument("-f", dest="write_seperate_FDF", action="store_true",
                         help="Write separate files for the dirty FDF [False].")
+    parser.add_argument("-v", dest="verbose", action="store_true",
+                        help="Verbose [False].")
+
     args = parser.parse_args()
 
     # Sanity checks
@@ -102,13 +105,15 @@ def main():
             print("File does not exist: '%s'." % f)
             sys.exit()
     dataDir, dummy = os.path.split(args.fitsQ[0])
-    
+    verbose=args.verbose
+    pdb.set_trace()
     # Run RM-synthesis on the cubes
-    cl.run_rmsynth(fitsQ        = args.fitsQ[0],
-                fitsU        = args.fitsU[0],
-                freqFile     = args.freqFile[0],
-                fitsI        = args.fitsI,
-                noiseFile    = args.noiseFile,
+    cl.run_rmsynth(dataQ     = cl.readFitsCube(args.fitsQ[0], verbose)[1],
+                dataU        = cl.readFitsCube(args.fitsU[0], verbose)[1],
+                freqFile     = cl.readFreqFile(args.freqFile[0], verbose),
+                headtemplate = cl.readFitsCube(args.fitsQ[0], verbose)[0],
+                dataI        = cl.readFitsCube(args.fitsI[0], verbose)[1],
+                rmsArr_Jy    = cl.readFitsCube(args.noiseFile[0], verbose)[1],
                 phiMax_radm2 = args.phiMax_radm2,
                 dPhi_radm2   = args.dPhi_radm2,
                 nSamples     = args.nSamples,
@@ -117,7 +122,8 @@ def main():
                 outDir       = dataDir,
                 fitRMSF      = args.fitRMSF,
                 nBits        = 32,
-                write_seperate_FDF = args.write_seperate_FDF)
+                write_seperate_FDF = args.write_seperate_FDF,
+                verbose      = verbose)
 
 
 
