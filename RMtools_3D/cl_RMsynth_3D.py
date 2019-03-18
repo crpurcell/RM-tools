@@ -110,7 +110,7 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
     startTime = time.time()
 
     # Read the Stokes I model and divide into the Q & U data
-    if dataI:    
+    if dataI is not None:    
         with np.errstate(divide='ignore', invalid='ignore'):
             qArr = np.true_divide(dataQ, dataI)
             uArr = np.true_divide(dataU, dataI)
