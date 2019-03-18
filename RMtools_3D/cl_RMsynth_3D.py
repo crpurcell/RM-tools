@@ -148,7 +148,7 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
     # i.e., no NaNs as the amplitude at freq0_Hz is interpolated from the
     # nearest two planes.
     freq0_Hz = C / m.sqrt(lam0Sq_m2)
-    if dataI:
+    if dataI is not None:
         idx = np.abs(freqArr_Hz - freq0_Hz).argmin()
         if freqArr_Hz[idx]<freq0_Hz:
             Ifreq0Arr = interp_images(dataI[idx, :, :], dataI[idx+1, :, :], f=0.5)
