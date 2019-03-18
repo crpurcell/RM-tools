@@ -106,14 +106,21 @@ def main():
             sys.exit()
     dataDir, dummy = os.path.split(args.fitsQ[0])
     verbose=args.verbose
-    pdb.set_trace()
+    if args.fitsI is not None:
+        dataI = cl.readFitsCube(args.fitsI, verbose)[1]
+    else:
+        dataI=None
+    if args.noiseFile is not None:
+        rmsArr_Jy = cl.readFitsCube(args.noiseFile[0], verbose)[1]
+    else:
+        rmsArr_Jy=None
     # Run RM-synthesis on the cubes
     cl.run_rmsynth(dataQ     = cl.readFitsCube(args.fitsQ[0], verbose)[1],
                 dataU        = cl.readFitsCube(args.fitsU[0], verbose)[1],
-                freqFile     = cl.readFreqFile(args.freqFile[0], verbose),
+                freqArr_Hz   = cl.readFreqFile(args.freqFile[0], verbose),
                 headtemplate = cl.readFitsCube(args.fitsQ[0], verbose)[0],
-                dataI        = cl.readFitsCube(args.fitsI[0], verbose)[1],
-                rmsArr_Jy    = cl.readFitsCube(args.noiseFile[0], verbose)[1],
+                dataI        = dataI,
+                rmsArr_Jy    = rmsArr_Jy,
                 phiMax_radm2 = args.phiMax_radm2,
                 dPhi_radm2   = args.dPhi_radm2,
                 nSamples     = args.nSamples,

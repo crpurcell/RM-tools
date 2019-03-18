@@ -255,7 +255,7 @@ def readFitsCube(file, verbose):
         data=data[:,:,:]
         # Feeback
         if(verbose): print("The first 3 dimensions of the cubes are [X=%d, Y=%d, Z=%d]." % \
-          (headQ["NAXIS1"], headQ["NAXIS2"], headQ["NAXIS3"]))
+          (head["NAXIS1"], head["NAXIS2"], head["NAXIS3"]))
 
     elif head["NAXIS"]==4:
         # Feeback
