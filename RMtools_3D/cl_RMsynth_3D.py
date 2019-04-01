@@ -178,10 +178,10 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
 
 
     
-    hdu0 = pf.PrimaryHDU(FDFcube.real.astype(dtFloat), header)
-    hdu1 = pf.ImageHDU(FDFcube.imag.astype(dtFloat), header)
-    hdu2 = pf.ImageHDU(np.abs(FDFcube).astype(dtFloat), header)
     if(write_seperate_FDF):
+        hdu0 = pf.PrimaryHDU(FDFcube.real.astype(dtFloat), header)
+        hdu1 = pf.PrimaryHDU(FDFcube.imag.astype(dtFloat), header)
+        hdu2 = pf.PrimaryHDU(np.abs(FDFcube).astype(dtFloat), header)
         fitsFileOut = outDir + "/" + prefixOut + "FDF_real_dirty.fits"
         if(verbose): log("> %s" % fitsFileOut)
         hdu0.writeto(fitsFileOut, output_verify="fix", overwrite=True)
@@ -196,6 +196,9 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
 
     else:
         # Save the dirty FDF
+        hdu0 = pf.PrimaryHDU(FDFcube.real.astype(dtFloat), header)
+        hdu1 = pf.ImageHDU(FDFcube.imag.astype(dtFloat), header)
+        hdu2 = pf.ImageHDU(np.abs(FDFcube).astype(dtFloat), header)
         fitsFileOut = outDir + "/" + prefixOut + "FDF_dirty.fits"
         if(verbose): log("> %s" % fitsFileOut)
         hduLst = pf.HDUList([hdu0, hdu1, hdu2])
@@ -230,17 +233,39 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
 
     # Save the RMSF
     header["CRVAL3"] = phi2Arr_radm2[0]
-    fitsFileOut = outDir + "/" + prefixOut + "RMSF.fits"
-    hdu0 = pf.PrimaryHDU(RMSFcube.real.astype(dtFloat), header)
-    hdu1 = pf.ImageHDU(RMSFcube.imag.astype(dtFloat), header)
-    hdu2 = pf.ImageHDU(np.abs(RMSFcube).astype(dtFloat), header)
     header["DATAMAX"] = np.max(fwhmRMSFCube) + 1
     header["DATAMIN"] = np.max(fwhmRMSFCube) - 1
-    hdu3 = pf.ImageHDU(fwhmRMSFCube.astype(dtFloat), header)
-    hduLst = pf.HDUList([hdu0, hdu1, hdu2, hdu3])
-    if(verbose): log("> %s" % fitsFileOut)
-    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
-    hduLst.close()
+    if(write_seperate_FDF):
+        hdu0 = pf.PrimaryHDU(RMSFcube.real.astype(dtFloat), header)
+        hdu1 = pf.PrimaryHDU(RMSFcube.imag.astype(dtFloat), header)
+        hdu2 = pf.PrimaryHDU(np.abs(RMSFcube).astype(dtFloat), header)
+        hdu3 = pf.PrimaryHDU(fwhmRMSFCube.astype(dtFloat), header)
+        fitsFileOut = outDir + "/" + prefixOut + "RMSF_real.fits"
+        if(verbose): log("> %s" % fitsFileOut)
+        hdu0.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+
+        fitsFileOut = outDir + "/" + prefixOut + "RMSF_im.fits"
+        if(verbose): log("> %s" % fitsFileOut)
+        hdu1.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+
+        fitsFileOut = outDir + "/" + prefixOut + "RMSF_tot.fits"
+        if(verbose): log("> %s" % fitsFileOut)
+        hdu2.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+
+        fitsFileOut = outDir + "/" + prefixOut + "RMSF_FWHM.fits"
+        if(verbose): log("> %s" % fitsFileOut)
+        hdu3.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        
+    else:
+        fitsFileOut = outDir + "/" + prefixOut + "RMSF.fits"
+        hdu0 = pf.PrimaryHDU(RMSFcube.real.astype(dtFloat), header)
+        hdu1 = pf.ImageHDU(RMSFcube.imag.astype(dtFloat), header)
+        hdu2 = pf.ImageHDU(np.abs(RMSFcube).astype(dtFloat), header)
+        hdu3 = pf.ImageHDU(fwhmRMSFCube.astype(dtFloat), header)
+        hduLst = pf.HDUList([hdu0, hdu1, hdu2, hdu3])
+        if(verbose): log("> %s" % fitsFileOut)
+        hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        hduLst.close()
 
 def readFitsCube(file, verbose, log = print):
 

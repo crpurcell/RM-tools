@@ -64,11 +64,25 @@ def main():
     Saves cubes containing the complex Faraday dispersion function (FDF), a 
     cube of double-size Rotation Measure Spread Functions, a peak Faraday
     depth map, a first-moment map and a maximum polarised intensity map.
-    
+    """
+
+    epilog_text="""
+    Output files:
+        Default:
+        FDF_dirty.fits: FDF, in 3 extensions: Q,U, and PI.
+        FDF_maxPI.fits: 2D map of peak polarized intensity per pixel.
+        FDF_maxPI.fits: 2D map of Faraday depth of highest peak, per pixel.
+        RMSF.fits: 4 extensions; first 3 are RMSF cubes [Q, U, PI]
+                                 4th is 2D map of RMSF FWHM.
+        With -f flag:
+        FDF_dirty.fits is split into three constituent components:
+            FDF_real_dirty.fits: Stokes Q
+            FDF_im_dirty.fits: Stokes U
+            FDF_tot_dirty.fits: Polarizd Intensity (sqrt(Q^2+U^2))
     """
 
     # Parse the command line options
-    parser = argparse.ArgumentParser(description=descStr,
+    parser = argparse.ArgumentParser(description=descStr,epilog=epilog_text,
                                  formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("fitsQ", metavar="StokesQ.fits", nargs=1,
                         help="FITS cube containing Stokes Q data.")
@@ -85,7 +99,7 @@ def main():
     parser.add_argument("-t", dest="fitRMSF", action="store_true",
                         help="Fit a Gaussian to the RMSF [False]")
     parser.add_argument("-l", dest="phiMax_radm2", type=float, default=None,
-                        help="Absolute max Faraday depth sampled [Auto].")
+                        help="Absolute max Faraday depth sampled (overrides NSAMPLES) [Auto].")
     parser.add_argument("-d", dest="dPhi_radm2", type=float, default=None,
                         help="Width of Faraday depth channel [Auto].")
     parser.add_argument("-o", dest="prefixOut", default="",
@@ -93,7 +107,7 @@ def main():
     parser.add_argument("-s", dest="nSamples", type=float, default=5,
                         help="Number of samples across the FWHM RMSF.")
     parser.add_argument("-f", dest="write_seperate_FDF", action="store_true",
-                        help="Write separate files for the dirty FDF [False].")
+                        help="Separate dirty FDF components into individual files [False].")
     parser.add_argument("-v", dest="verbose", action="store_true",
                         help="Verbose [False].")
 

@@ -53,16 +53,23 @@ def main():
     descStr = """
     Run RM-CLEAN on an ASCII Faraday dispersion function (FDF), applying
     the rotation measure spread function created by the script
-    'do_RMsynth_1D.py'. Saves an ASCII file containing a deconvolved FDF &
+    'do_RMsynth_1D.py'. Saves ASCII files containing a deconvolved FDF &
     clean-component spectrum.
-    
+    """
+
+    epilog_text="""
+    By default, saves the following files:
+    _FDFclean.dat: cleaned and restored FDF [Phi, Q, U]
+    _FDFmodel.dat: clean component FDF [Phi, Q, U]
+    _RMclean.dat: list of calculated paramaters describing FDF
+    _RMclean.json: dictionary of calculated parameters
     """
     
     # Parse the command line options
-    parser = argparse.ArgumentParser(description=descStr,
+    parser = argparse.ArgumentParser(description=descStr,epilog=epilog_text,
                                  formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("dataFile", metavar="dataFile.dat", nargs=1,
-                        help="ASCII file containing original spectra.")
+                        help="ASCII file containing original frequency spectra.")
     parser.add_argument("-c", dest="cutoff", type=float, default=-3,
                         help="CLEAN cutoff (+ve = absolute, -ve = sigma) [-3].")
     parser.add_argument("-n", dest="maxIter", type=int, default=1000,

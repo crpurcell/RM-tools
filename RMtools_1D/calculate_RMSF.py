@@ -112,7 +112,8 @@ def determine_RMSF_parameters(freq_array,weights_array,phi_max,dphi,plotfile=Non
     print('Theoretical largest FD scale probed: {:.4g} rad m^-2'.format(np.pi/l2_min))
     print('Theoretical maximum FD*:             {:.4g} rad m^-2'.format(np.sqrt(3.0)/dl2))
     print('*50% bandwdith depolarization threshold, for median channel width in Delta-lambda^2')
-
+    print('* may not be reliable over very large fractional bandwidths or in data with ')
+    print('differing channel widths or many frequency gaps.')
     #Explanation for below: This code find the local maxima in the positive half of the RMSF, 
     #finds the highest amplitude one, and calls that the first sidelobe.
     x=np.diff(np.sign(np.diff(np.abs(RMSFcube[RMSFcube.size//2:])))) #-2=local max, +2=local min

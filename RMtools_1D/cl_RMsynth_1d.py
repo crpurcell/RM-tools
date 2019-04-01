@@ -397,6 +397,7 @@ def readFile(dataFile, nBits, verbose):
          dIArr_Jy, dQArr_Jy, dUArr_Jy) = \
          np.loadtxt(dataFile, unpack=True, dtype=dtFloat)
         if verbose: print("... success.")
+        data=[freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy, dIArr_Jy, dQArr_Jy, dUArr_Jy]
     except Exception:
         if verbose: print("...failed.")
         # freq_Hz, q_Jy, u_Jy, dq_Jy, du_Jy
@@ -405,6 +406,8 @@ def readFile(dataFile, nBits, verbose):
             (freqArr_Hz, QArr_Jy, UArr_Jy, dQArr_Jy, dUArr_Jy) = \
                          np.loadtxt(dataFile, unpack=True, dtype=dtFloat)
             if verbose: print("... success.")
+            data=[freqArr_Hz, QArr_Jy, UArr_Jy, dQArr_Jy, dUArr_Jy]
+
             noStokesI = True
         except Exception:
             if verbose: print("...failed.")
@@ -412,42 +415,43 @@ def readFile(dataFile, nBits, verbose):
                 print(traceback.format_exc())
             sys.exit()
     if verbose: print("Successfully read in the Stokes spectra.")
-    data=[freqArr_Hz, IArr_Jy, QArr_Jy, UArr_Jy, dIArr_Jy, dQArr_Jy, dUArr_Jy]
     return data
 
 def saveOutput(outdict, arrdict, prefixOut, verbose):
     # Save the  dirty FDF, RMSF and weight array to ASCII files
     if verbose: print("Saving the dirty FDF, RMSF weight arrays to ASCII files.")
+    outFile = prefixOut + "_FDFdirty.dat"
     if verbose: 
-       outFile = prefixOut + "_FDFdirty.dat"
-       print("> %s" % outFile)
+        print("> %s" % outFile)
     np.savetxt(outFile, list(zip(arrdict["phiArr_radm2"], arrdict["dirtyFDF"].real, arrdict["dirtyFDF"].imag)))
     
+    outFile = prefixOut + "_RMSF.dat"
     if verbose: 
-       outFile = prefixOut + "_RMSF.dat"
-       print("> %s" % outFile)       
+        print("> %s" % outFile)       
     np.savetxt(outFile, list(zip(arrdict["phi2Arr_radm2"], arrdict["RMSFArr"].real, arrdict["RMSFArr"].imag)))
     
+    outFile = prefixOut + "_weight.dat"
     if verbose: 
-       outFile = prefixOut + "_weight.dat"
-       print("> %s" % outFile)
+        print("> %s" % outFile)
     np.savetxt(outFile, list(zip(arrdict["freqArr_Hz"], arrdict["weightArr"])))
 
     # Save the measurements to a "key=value" text file
+    outFile = prefixOut + "_RMsynth.dat"
+
     if verbose: 
-       print("Saving the measurements on the FDF in 'key=val' and JSON formats.")
-       outFile = prefixOut + "_RMsynth.dat"
-       print("> %s" % outFile)
+        print("Saving the measurements on the FDF in 'key=val' and JSON formats.")
+        print("> %s" % outFile)
 
     FH = open(outFile, "w")
     for k, v in outdict.items():
         FH.write("%s=%s\n" % (k, v))
     FH.close()
        
+
+    outFile = prefixOut + "_RMsynth.json"
     
     if verbose: 
-       outFile = prefixOut + "_RMsynth.json"
-       print("> %s" % outFile)
+        print("> %s" % outFile)
     json.dump(dict(outdict), open(outFile, "w"))       
 
 

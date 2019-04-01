@@ -55,10 +55,27 @@ def main():
     Run RM-synthesis on Stokes I, Q and U spectra (1D) stored in an ASCII
     file. The Stokes I spectrum is first fit with a polynomial and the 
     resulting model used to create fractional q = Q/I and u = U/I spectra.
+
+    The ASCII file should the following columns, in a space separated format:
+    [freq_Hz, I, Q, U, I_err, Q_err, U_err]
+    OR
+    [freq_Hz, Q, U, Q_err, U_err]
+    Stokes units are assumed to be Jy, but output will have same units as input.
+
+    """
+
+    epilog_text="""
+    Outputs with -S flag:
+    _FDFdirty.dat: Dirty FDF/RM Spectrum [Phi, Q, U]
+    _RMSF.dat: Computed RMSF [Phi, Q, U]
+    _RMsynth.dat: list of derived parameters for RM spectrum
+                (approximately equivalent to -v flag output)
+    _RMsynth.json: dictionary of derived parameters for RM spectrum
+    _weight.dat: Calculated channel weights [freq_Hz, weight]
     """
     
     # Parse the command line options
-    parser = argparse.ArgumentParser(description=descStr,
+    parser = argparse.ArgumentParser(description=descStr,epilog=epilog_text,
                                  formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("dataFile", metavar="dataFile.dat", nargs=1,
                         help="ASCII file containing Stokes spectra & errors.")
@@ -67,17 +84,17 @@ def main():
     parser.add_argument("-l", dest="phiMax_radm2", type=float, default=None,
                         help="absolute max Faraday depth sampled [Auto].")
     parser.add_argument("-d", dest="dPhi_radm2", type=float, default=None,
-                        help="width of Faraday depth channel [Auto].")
+                        help="width of Faraday depth channel [Auto].\n(overrides -s NSAMPLES flag)")
     parser.add_argument("-s", dest="nSamples", type=float, default=10,
                         help="number of samples across the RMSF lobe [10].")
     parser.add_argument("-w", dest="weightType", default="variance",
-                        help="weighting [variance] or 'uniform' (all 1s).")
+                        help="weighting [inverse variance] or 'uniform' (all 1s).")
     parser.add_argument("-o", dest="polyOrd", type=int, default=2,
                         help="polynomial order to fit to I spectrum [2].")
     parser.add_argument("-i", dest="noStokesI", action="store_true",
                         help="ignore the Stokes I spectrum [False].")
     parser.add_argument("-b", dest="bit64", action="store_true",
-                        help="use 64-bit floating point precision [False]")
+                        help="use 64-bit floating point precision [False (uses 32-bit)]")
     parser.add_argument("-p", dest="showPlots", action="store_true",
                         help="show the plots [False].")
     parser.add_argument("-v", dest="verbose", action="store_true",

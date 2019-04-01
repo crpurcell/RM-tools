@@ -59,24 +59,25 @@ def main():
     a cube of rotation measure spread functions created by the script
     'do_RMsynth_3D.py'. Saves a cube of deconvolved FDFs & clean-component
     spectra, and a pixel map showing the number of iterations performed.
-    
     """
     
     # Parse the command line options
     parser = argparse.ArgumentParser(description=descStr,
                                  formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("fitsFDF", metavar="FDF_dirty.fits", nargs=1,
-                        help="FITS cube containing the dirty FDF.")
+                        help="FITS cube containing the dirty FDF.\n(Must be the single-file output from do_RMsynth_3D.py)")
     parser.add_argument("fitsRMSF", metavar="RMSF.fits", nargs=1,
-                        help="FITS cube containing the RMSF and FWHM image.")
+                        help="FITS cube containing the RMSF and FWHM image.\n(Must be the single-file output from do_RMsynth_3D.py)")
     parser.add_argument("-c", dest="cutoff_mJy", type=float, nargs=1,
                         default=1.0, help="CLEAN cutoff in mJy")
     parser.add_argument("-n", dest="maxIter", type=int, default=1000,
-                        help="Maximum number of CLEAN iterations [1000].")
+                        help="Maximum number of CLEAN iterations per pixel [1000].")
     parser.add_argument("-g", dest="gain", type=float, default=0.1,
                         help="CLEAN loop gain [0.1].")
     parser.add_argument("-o", dest="prefixOut", default="",
                         help="Prefix to prepend to output files [None].")
+    parser.add_argument("-f", dest="write_separate_FDF", action="store_true",
+                        help="Separate complex (multi-extension) FITS files into individual files [False].")
     args = parser.parse_args()
 
     # Sanity checks
@@ -94,11 +95,12 @@ def main():
                 gain        = args.gain,
                 prefixOut   = args.prefixOut,
                 outDir      = dataDir,
-                nBits       = 32)
+                nBits       = 32,
+                write_separate_FDF=args.write_separate_FDF)
 
 #-----------------------------------------------------------------------------#
 def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
-                prefixOut="", outDir="", nBits=32):
+                prefixOut="", outDir="", nBits=32,write_separate_FDF=False):
     """Run RM-CLEAN on a FDF cube given a RMSF cube."""
 
 
@@ -149,26 +151,53 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
         outDir='.'
 
     # Save the clean FDF
-    fitsFileOut = outDir + "/" + prefixOut + "FDF_clean.fits"
-    print("> %s" % fitsFileOut)
-    hdu0 = pf.PrimaryHDU(cleanFDF.real.astype(dtFloat), head)
-    hdu1 = pf.ImageHDU(cleanFDF.imag.astype(dtFloat), head)
-    hdu2 = pf.ImageHDU(np.abs(cleanFDF).astype(dtFloat), head)
-#    hdu3 = pf.ImageHDU(ccArr.astype(dtFloat), head)
-    hduLst = pf.HDUList([hdu0, hdu1, hdu2])
-    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
-    hduLst.close()
-    
+    if not write_separate_FDF:
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_clean.fits"
+        print("> %s" % fitsFileOut)
+        hdu0 = pf.PrimaryHDU(cleanFDF.real.astype(dtFloat), head)
+        hdu1 = pf.ImageHDU(cleanFDF.imag.astype(dtFloat), head)
+        hdu2 = pf.ImageHDU(np.abs(cleanFDF).astype(dtFloat), head)
+        hduLst = pf.HDUList([hdu0, hdu1, hdu2])
+        hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        hduLst.close()
+    else:
+        hdu0 = pf.PrimaryHDU(cleanFDF.real.astype(dtFloat), head)
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_clean_real.fits"
+        hdu0.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        print("> %s" % fitsFileOut)
+        hdu1 = pf.PrimaryHDU(cleanFDF.imag.astype(dtFloat), head)
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_clean_im.fits"
+        hdu1.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        print("> %s" % fitsFileOut)
+        hdu2 = pf.PrimaryHDU(np.abs(cleanFDF).astype(dtFloat), head)
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_clean_tot.fits"
+        hdu2.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        print("> %s" % fitsFileOut)
+
+    if not write_separate_FDF:
     #Save the complex clean components as another file.
-    fitsFileOut = outDir + "/" + prefixOut + "FDF_CC.fits"
-    print("> %s" % fitsFileOut)
-    hdu0 = pf.PrimaryHDU(ccArr.real.astype(dtFloat), head)
-    hdu1 = pf.ImageHDU(ccArr.imag.astype(dtFloat), head)
-    hdu2 = pf.ImageHDU(np.abs(ccArr).astype(dtFloat), head)
-    hduLst = pf.HDUList([hdu0, hdu1, hdu2])
-    hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
-    hduLst.close()
-    
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_CC.fits"
+        print("> %s" % fitsFileOut)
+        hdu0 = pf.PrimaryHDU(ccArr.real.astype(dtFloat), head)
+        hdu1 = pf.ImageHDU(ccArr.imag.astype(dtFloat), head)
+        hdu2 = pf.ImageHDU(np.abs(ccArr).astype(dtFloat), head)
+        hduLst = pf.HDUList([hdu0, hdu1, hdu2])
+        hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        hduLst.close()
+    else:
+        hdu0 = pf.PrimaryHDU(ccArr.real.astype(dtFloat), head)
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_CC_real.fits"
+        hdu0.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        print("> %s" % fitsFileOut)
+        hdu1 = pf.PrimaryHDU(ccArr.imag.astype(dtFloat), head)
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_CC_im.fits"
+        hdu1.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        print("> %s" % fitsFileOut)
+        hdu2 = pf.PrimaryHDU(np.abs(ccArr).astype(dtFloat), head)
+        fitsFileOut = outDir + "/" + prefixOut + "FDF_CC_tot.fits"
+        hdu2.writeto(fitsFileOut, output_verify="fix", overwrite=True)
+        print("> %s" % fitsFileOut)
+
 
     # Save the iteration count mask
     fitsFileOut = outDir + "/" + prefixOut + "CLEAN_nIter.fits"

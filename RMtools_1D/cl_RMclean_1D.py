@@ -146,7 +146,7 @@ def run_rmclean(mDictS, aDict, cutoff,
     np.savetxt(outFile, list(zip(phiArr_radm2, cleanFDF.real, cleanFDF.imag)))
     outFile = prefixOut + "_FDFmodel.dat"
     log("> %s" % outFile)
-    np.savetxt(outFile, list(zip(phiArr_radm2, ccArr)))
+    np.savetxt(outFile, list(zip(phiArr_radm2, ccArr.real, ccArr.imag)))
 
     # Save the RM-clean measurements to a "key=value" text file
     log("Saving the measurements on the FDF in 'key=val' and JSON formats.")
