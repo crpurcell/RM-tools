@@ -1472,7 +1472,6 @@ def plot_rmsf_fdf_fig(phiArr, FDF, phi2Arr, RMSFArr, fwhmRMSF=None,
     # Default to a pyplot figure
     if fig==None:
         fig = plt.figure(figsize=(12.0, 8))
-    
     # Plot the RMSF
     ax1 = fig.add_subplot(211)    
     plot_RMSF_ax(ax=ax1,

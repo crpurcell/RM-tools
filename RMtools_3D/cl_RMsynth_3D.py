@@ -162,12 +162,24 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
         # Multiply the dirty FDF by Ifreq0 to recover the PI in Jy
         FDFcube *= Ifreq0Arr
     
-    # Make a copy of the Q header and alter Z-axis as Faraday depth
-    header = headtemplate
-    header["CTYPE3"] = "FARADAY DEPTH"
-    header["CDELT3"] = np.diff(phiArr_radm2)[0]
-    header["CRPIX3"] = 1.0
-    header["CRVAL3"] = phiArr_radm2[0]
+    
+    # Make a copy of the Q header and alter frequency-axis as Faraday depth
+    header = headtemplate.copy()
+    Ndim=header['NAXIS']
+    freq_axis=Ndim #If frequency axis not found, assume it's the last one.
+    #Check for frequency axes. Because I don't know what different formatting
+    #I might get ('FREQ' vs 'OBSFREQ' vs 'Freq' vs 'Frequency'), convert to 
+    #all caps and check for 'FREQ' anywhere in the axis name.
+    for i in range(1,Ndim+1):
+        if 'FREQ' in header['CTYPE'+str(i)].upper():
+            freq_axis=i
+    
+    header["NAXIS"+str(freq_axis)] = phiArr_radm2.size
+    header["CTYPE"+str(freq_axis)] = "FARADAY DEPTH"
+    header["CDELT"+str(freq_axis)] = np.diff(phiArr_radm2)[0]
+    header["CRPIX"+str(freq_axis)] = 1.0
+    header["CRVAL"+str(freq_axis)] = phiArr_radm2[0]
+    header["CUNIT"+str(freq_axis)] = "rad/m^2"
     if "DATAMAX" in header:
         del header["DATAMAX"]
     if "DATAMIN" in header:
@@ -175,8 +187,20 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
 
     if outDir=='':  #To prevent code breaking if file is in current directory
         outDir='.'
-
-
+    
+    #Re-add any initially removed degenerate axes (to match with FITS header)
+    #NOTE THIS HAS NOT BEEN RIGOROUSLY TESTED!!!
+    output_axes=[]
+    for i in range(1,Ndim+1):
+        output_axes.append(header['NAXIS'+str(i)]) #Get FITS dimensions
+    del output_axes[freq_axis-1] #Remove frequency axis (since it's first in the array)
+    output_axes.reverse()  #To get into numpy order.
+    #Put frequency axis first, and reshape to add degenerate axes:
+    FDFcube=np.reshape(FDFcube,[FDFcube.shape[0]]+output_axes) 
+    
+    
+    #Move Faraday depth axis to appropriate position to match header.
+    FDFcube=np.moveaxis(FDFcube,0,Ndim-freq_axis)
     
     if(write_seperate_FDF):
         hdu0 = pf.PrimaryHDU(FDFcube.real.astype(dtFloat), header)
@@ -205,34 +229,10 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
         hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
         hduLst.close()
     
-    # Save a maximum polarised intensity map
-    fitsFileOut = outDir + "/" + prefixOut + "FDF_maxPI.fits"
-    if(verbose): log("> %s" % fitsFileOut)
-    pf.writeto(fitsFileOut, np.max(np.abs(FDFcube), 0).astype(dtFloat), header,
-               overwrite=True, output_verify="fix")
     
-    # Save a peak RM map
-    fitsFileOut = outDir + "/" + prefixOut + "FDF_peakRM.fits"
-    header["BUNIT"] = "rad/m^2"
-    peakFDFmap = np.argmax(np.abs(FDFcube), 0).astype(dtFloat)
-    peakFDFmap = header["CRVAL3"] + (peakFDFmap + 1
-                                     - header["CRPIX3"]) * header["CDELT3"]
-    if(verbose): log("> %s" % fitsFileOut)
-    pf.writeto(fitsFileOut, peakFDFmap, header, overwrite=True,
-               output_verify="fix")
-    
-    # Save an RM moment-1 map
-    fitsFileOut = outDir + "/" + prefixOut + "FDF_mom1.fits"
-    header["BUNIT"] = "rad/m^2"
-    mom1FDFmap = (np.nansum(np.abs(FDFcube).transpose(1,2,0) * phiArr_radm2, 2)
-                  /np.nansum(np.abs(FDFcube).transpose(1,2,0), 2))
-    mom1FDFmap = mom1FDFmap.astype(dtFloat)
-    if(verbose): log("> %s" % fitsFileOut)
-    pf.writeto(fitsFileOut, mom1FDFmap, header, overwrite=True,
-               output_verify="fix")
-
     # Save the RMSF
-    header["CRVAL3"] = phi2Arr_radm2[0]
+    header["NAXIS"+str(freq_axis)] = phi2Arr_radm2.size
+    header["CRVAL"+str(Ndim)] = phi2Arr_radm2[0]
     header["DATAMAX"] = np.max(fwhmRMSFCube) + 1
     header["DATAMIN"] = np.max(fwhmRMSFCube) - 1
     if(write_seperate_FDF):
@@ -266,8 +266,49 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
         if(verbose): log("> %s" % fitsFileOut)
         hduLst.writeto(fitsFileOut, output_verify="fix", overwrite=True)
         hduLst.close()
+        
 
-def readFitsCube(file, verbose, log = print):
+ 
+    #Because there can be problems with different axes having different FITS keywords,
+    #don't try to remove the FD axis, but just make it degenerate.
+    header["NAXIS"+str(freq_axis)] = 1
+    if "DATAMAX" in header:
+        del header["DATAMAX"]
+    if "DATAMIN" in header:
+        del header["DATAMIN"]
+
+        
+
+    # Save a maximum polarised intensity map
+    fitsFileOut = outDir + "/" + prefixOut + "FDF_maxPI.fits"
+    if(verbose): log("> %s" % fitsFileOut)
+    pf.writeto(fitsFileOut, np.max(np.abs(FDFcube), freq_axis-1).astype(dtFloat), header,
+               overwrite=True, output_verify="fix")
+    
+    # Save a peak RM map
+    fitsFileOut = outDir + "/" + prefixOut + "FDF_peakRM.fits"
+    header["BUNIT"] = "rad/m^2"
+    peakFDFmap = np.argmax(np.abs(FDFcube), freq_axis-1).astype(dtFloat)
+    peakFDFmap = header["CRVAL"+str(Ndim)] + (peakFDFmap + 1
+                                     - header["CRPIX"+str(Ndim)]) * header["CDELT"+str(Ndim)]
+    if(verbose): log("> %s" % fitsFileOut)
+    pf.writeto(fitsFileOut, peakFDFmap, header, overwrite=True,
+               output_verify="fix")
+    
+    # Save an RM moment-1 map
+    fitsFileOut = outDir + "/" + prefixOut + "FDF_mom1.fits"
+    header["BUNIT"] = "rad/m^2"
+    mom1FDFmap = (np.nansum(np.moveaxis(np.abs(FDFcube),FDFcube.ndim-freq_axis,FDFcube.ndim-1) * phiArr_radm2, FDFcube.ndim-1)
+                  /np.nansum(np.abs(FDFcube), FDFcube.ndim-freq_axis))
+#    mom1FDFmap = (np.nansum(np.abs(FDFcube).transpose(1,2,0) * phiArr_radm2, 2)
+#                  /np.nansum(np.abs(FDFcube).transpose(1,2,0), 2))
+    mom1FDFmap = mom1FDFmap.astype(dtFloat)
+    if(verbose): log("> %s" % fitsFileOut)
+    pf.writeto(fitsFileOut, mom1FDFmap, header, overwrite=True,
+               output_verify="fix")
+
+
+def readFitsCube_old(file, verbose, log = print):
 
     if not os.path.exists(file):
         log("Err: File not found")
@@ -295,6 +336,60 @@ def readFitsCube(file, verbose, log = print):
 
     return head, data
     
+
+def readFitsCube(file, verbose, log = print):
+    """The old version of this function could only accept 3 or 4 axis input
+    (and implicitly assumed that in the 4 axis case that axis 3 was degenerate).
+    I'm trying to somewhat generalize this, so that it will accept NAXIS=1..3
+    cases and automatically try to identify which axis is the frequency axis,
+    and will try to remove the degenerate axis in the 4D case.
+    Where it can't find the correct frequency axis, it will assume it is the 
+    last one. It assumes any fourth or higher dimensions are degenerate (length 1)
+    and will remove them. If the higher dimensions are NOT degenerate (e.g., a
+    cube with all 4 Stokes), the code will fail (support may be added later?).
+    -Cameron (3 April 2019)
+    """
+    if not os.path.exists(file):
+        log("Err: File not found")
+    
+    if(verbose): log("Reading " + file + " ...")    
+    data = pf.getdata(file)
+    head = pf.getheader(file)
+    if(verbose): log("done.")
+    
+    N_dim=head['NAXIS'] #Get number of axes
+    if verbose:
+        print('Dimensions of the input cube are: ',end=' ')
+        for i in range(1,N_dim+1):
+            print('NAXIS{} = {}'.format(i,head['NAXIS'+str(i)]),end='  ')
+        print()
+    
+    freq_axis=0 #Default for 'frequency axis not identified'
+    #Check for frequency axes. Because I don't know what different formatting
+    #I might get ('FREQ' vs 'OBSFREQ' vs 'Freq' vs 'Frequency'), convert to 
+    #all caps and check for 'FREQ' anywhere in the axis name.
+    for i in range(1,N_dim+1):
+        if 'FREQ' in head['CTYPE'+str(i)].upper():
+            freq_axis=i
+    
+    #If the frequency axis isn't the last one, rotate the array until it is.
+    #Recall that pyfits reverses the axis ordering, so we want frequency on
+    #axis 0 of the numpy array.
+    if freq_axis != 0 and freq_axis != N_dim:
+        data=np.moveaxis(data,N_dim-freq_axis,0)
+    
+    if N_dim >= 4:
+        data=np.squeeze(data) #Remove degenerate axes
+
+    if verbose:
+        print('Dimensions of the input array are: ',data.shape)
+        
+    if data.ndim > 3:
+        raise Exception('Data cube has too many (non-degenerate) axes!')
+        
+    return head, data
+    
+
 def readFreqFile(file, verbose, log = print):
     # Read the frequency vector and wavelength sampling
     freqArr_Hz = np.loadtxt(file, dtype=float)

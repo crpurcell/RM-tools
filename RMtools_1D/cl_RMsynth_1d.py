@@ -34,15 +34,15 @@
 #=============================================================================#
   
 import sys
-import os
+#import os
 import time
-import argparse
+#import argparse
 import traceback
 import json
 import math as m
 import numpy as np
 import matplotlib.pyplot as plt
-import pdb
+#import pdb
 
 from RMutils.util_RM import do_rmsynth
 from RMutils.util_RM import do_rmsynth_planes
@@ -345,7 +345,8 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
                                             mDict["dSigmaAddMinusU"]))
        log()
        log('-'*80)
-    
+
+
 
     # Plot the RM Spread Function and dirty FDF
     if showPlots:

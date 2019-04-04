@@ -126,8 +126,7 @@ def do_rmsynth_planes(dataQ, dataU, lambdaSqArr_m2, phiArr_radm2,
         log("Err: data dimensions must be <= 3.")
         return None, None
     if not dataQ.shape[0] == lambdaSqArr_m2.shape[0]:
-        log("Err: Data depth does not match lambda^2 vector (%d vs %d).", end=' ')
-        (dataQ.shape[0], lambdaSqArr_m2.shape[0])
+        log("Err: Data depth does not match lambda^2 vector ({} vs {}).".format(dataQ.shape[0], lambdaSqArr_m2.shape[0]), end=' ')
         log("     Check that data is in [z, y, x] order.")
         return None, None
     
