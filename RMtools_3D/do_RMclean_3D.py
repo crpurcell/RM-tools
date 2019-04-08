@@ -109,20 +109,19 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
     dtComplex = "complex" + str(2*nBits)
 
     # Read the FDF
-    HDULst = pf.open(fitsFDF, "readonly", memmap=True)
-    head = HDULst[0].header.copy()
-    FDFreal = HDULst[0].data
-    FDFimag = HDULst[1].data
-    dirtyFDF = FDFreal + 1j * FDFimag
-    phiArr_radm2 = fits_make_lin_axis(HDULst[0].header, axis=2, dtype=dtFloat)
+    dirtyFDF, head,FD_axis=read_FDF_cube(fitsFDF)
+
+    
+    
+    phiArr_radm2 = fits_make_lin_axis(head, axis=FD_axis-1, dtype=dtFloat)
     
     # Read the RMSF
+
+    RMSFArr, headRMSF,FD_axis=read_FDF_cube(fitsRMSF)
     HDULst = pf.open(fitsRMSF, "readonly", memmap=True)
-    RMSFreal = HDULst[0].data
-    RMSFimag = HDULst[1].data
     fwhmRMSFArr = HDULst[3].data
-    RMSFArr = RMSFreal + 1j * RMSFimag
-    phi2Arr_radm2 = fits_make_lin_axis(HDULst[0].header, axis=2, dtype=dtFloat)
+    HDULst.close()
+    phi2Arr_radm2 = fits_make_lin_axis(headRMSF, axis=FD_axis-1, dtype=dtFloat)
 
     startTime = time.time()
     
@@ -149,6 +148,12 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
 
     if outDir=='':  #To prevent code breaking if file is in current directory
         outDir='.'
+
+    #Move FD axis back to original position:
+    Ndim=head['NAXIS']
+    cleanFDF=np.moveaxis(cleanFDF,0,Ndim-FD_axis)
+    ccArr=np.moveaxis(ccArr,0,Ndim-FD_axis)
+    
 
     # Save the clean FDF
     if not write_separate_FDF:
@@ -209,6 +214,36 @@ def run_rmclean(fitsFDF, fitsRMSF, cutoff_mJy, maxIter=1000, gain=0.1,
     hduLst.close()
     
 
+def read_FDF_cube(filename):
+    """Read in a FDF/RMSF cube. Figures out which axis is Faraday depth and 
+    puts it first (in numpy order) to accommodate the rest of the code.
+    Returns: (complex_cube, header,FD_axis)
+    """
+    HDULst = pf.open(filename, "readonly", memmap=True)
+    head = HDULst[0].header.copy()
+    FDFreal = HDULst[0].data
+    FDFimag = HDULst[1].data
+    complex_cube = FDFreal + 1j * FDFimag
+    
+    #Identify Faraday depth axis (assumed to be last one if not explicitly found)
+    Ndim=head['NAXIS']
+    FD_axis=Ndim 
+    #Check for FD axes:
+    for i in range(1,Ndim+1):
+        try:
+            if 'FARADAY' in head['CTYPE'+str(i)].upper():
+                FD_axis=i
+        except:
+            pass #The try statement is needed for if the FITS header does not
+                 # have CTYPE keywords.
+
+    #Move FD axis to first place in numpy order.
+    if FD_axis != Ndim:
+        complex_cube=np.moveaxis(complex_cube,Ndim-FD_axis,0)
+
+
+    return complex_cube, head,FD_axis
+    
 #-----------------------------------------------------------------------------#
 if __name__ == "__main__":
     main()

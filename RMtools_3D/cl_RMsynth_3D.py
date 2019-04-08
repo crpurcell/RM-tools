@@ -171,8 +171,13 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
     #I might get ('FREQ' vs 'OBSFREQ' vs 'Freq' vs 'Frequency'), convert to 
     #all caps and check for 'FREQ' anywhere in the axis name.
     for i in range(1,Ndim+1):
-        if 'FREQ' in header['CTYPE'+str(i)].upper():
-            freq_axis=i
+        try:
+            if 'FREQ' in header['CTYPE'+str(i)].upper():
+                freq_axis=i
+        except:
+            pass #The try statement is needed for if the FITS header does not
+                 # have CTYPE keywords.
+
     
     header["NAXIS"+str(freq_axis)] = phiArr_radm2.size
     header["CTYPE"+str(freq_axis)] = "FARADAY DEPTH"
@@ -197,10 +202,13 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
     output_axes.reverse()  #To get into numpy order.
     #Put frequency axis first, and reshape to add degenerate axes:
     FDFcube=np.reshape(FDFcube,[FDFcube.shape[0]]+output_axes) 
-    
+    RMSFcube=np.reshape(RMSFcube,[RMSFcube.shape[0]]+output_axes) 
+        
     
     #Move Faraday depth axis to appropriate position to match header.
     FDFcube=np.moveaxis(FDFcube,0,Ndim-freq_axis)
+    RMSFcube=np.moveaxis(RMSFcube,0,Ndim-freq_axis)
+
     
     if(write_seperate_FDF):
         hdu0 = pf.PrimaryHDU(FDFcube.real.astype(dtFloat), header)
@@ -232,7 +240,7 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
     
     # Save the RMSF
     header["NAXIS"+str(freq_axis)] = phi2Arr_radm2.size
-    header["CRVAL"+str(Ndim)] = phi2Arr_radm2[0]
+    header["CRVAL"+str(freq_axis)] = phi2Arr_radm2[0]
     header["DATAMAX"] = np.max(fwhmRMSFCube) + 1
     header["DATAMIN"] = np.max(fwhmRMSFCube) - 1
     if(write_seperate_FDF):
@@ -288,9 +296,9 @@ def run_rmsynth(dataQ, dataU, freqArr_Hz, headtemplate, dataI=None, rmsArr_Jy=No
     # Save a peak RM map
     fitsFileOut = outDir + "/" + prefixOut + "FDF_peakRM.fits"
     header["BUNIT"] = "rad/m^2"
-    peakFDFmap = np.argmax(np.abs(FDFcube), freq_axis-1).astype(dtFloat)
-    peakFDFmap = header["CRVAL"+str(Ndim)] + (peakFDFmap + 1
-                                     - header["CRPIX"+str(Ndim)]) * header["CDELT"+str(Ndim)]
+    peakFDFmap = np.argmax(np.abs(FDFcube), Ndim-freq_axis).astype(dtFloat)
+    peakFDFmap = header["CRVAL"+str(freq_axis)] + (peakFDFmap + 1
+                                     - header["CRPIX"+str(freq_axis)]) * header["CDELT"+str(freq_axis)]
     if(verbose): log("> %s" % fitsFileOut)
     pf.writeto(fitsFileOut, peakFDFmap, header, overwrite=True,
                output_verify="fix")
@@ -369,8 +377,12 @@ def readFitsCube(file, verbose, log = print):
     #I might get ('FREQ' vs 'OBSFREQ' vs 'Freq' vs 'Frequency'), convert to 
     #all caps and check for 'FREQ' anywhere in the axis name.
     for i in range(1,N_dim+1):
-        if 'FREQ' in head['CTYPE'+str(i)].upper():
-            freq_axis=i
+        try:
+            if 'FREQ' in head['CTYPE'+str(i)].upper():
+                freq_axis=i
+        except:
+            pass #The try statement is needed for if the FITS header does not
+                 # have CTYPE keywords.
     
     #If the frequency axis isn't the last one, rotate the array until it is.
     #Recall that pyfits reverses the axis ordering, so we want frequency on

@@ -506,10 +506,10 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
         mskArr = np.reshape(mskArr,  (1, 1))
         fwhmRMSFArr = np.reshape(fwhmRMSFArr,  (1, 1))
     elif nDims==2:
-        dirtyFDF = np.reshape(list(dirtyFDF.shape[:2])+[1])
-        RMSFArr = np.reshape(list(RMSFArr.shape[:2])+[1])
-        mskArr = np.reshape(mskArr,  (1, dirtyFDF.shape[1]))
-        fwhmRMSFArr = np.reshape(fwhmRMSFArr,  (1, dirtyFDF.shape[1]))
+        dirtyFDF = np.reshape(dirtyFDF,list(dirtyFDF.shape[:2])+[1])
+        RMSFArr = np.reshape(RMSFArr,list(RMSFArr.shape[:2])+[1])
+        mskArr = np.reshape(mskArr,  (dirtyFDF.shape[1],1))
+        fwhmRMSFArr = np.reshape(fwhmRMSFArr,  (dirtyFDF.shape[1],1))
     iterCountArr = np.zeros_like(mskArr, dtype="int")
 
     # Determine which pixels have components above the cutoff
@@ -545,11 +545,12 @@ def do_rmclean_hogbom(dirtyFDF, phiArr_radm2, RMSFArr, phi2Arr_radm2,
     # Loop through the pixels containing a polarised signal
     j = 0
     if verbose:
-        progress(40, 0)
+        pass  
+        #progress(40, 0)  #This is currently broken...
     for yi, xi in xyCoords:
         if verbose:
             j += 1
-            progress(40, ((j)*100.0/nCleanPix))
+            #progress(40, ((j)*100.0/nCleanPix))  #This is currently broken...
 
         # Find the index of the peak of the RMSF
         indxMaxRMSF = np.nanargmax(RMSFArr[:, yi, xi])
