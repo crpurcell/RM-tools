@@ -191,7 +191,7 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
         phiMax_radm2 = max(phiMax_radm2, 600.0)    # Force the minimum phiMax
 
     # Faraday depth sampling. Zero always centred on middle channel
-    nChanRM = round(abs((phiMax_radm2 - 0.0) / dPhi_radm2)) * 2.0 + 1.0
+    nChanRM = int(round(abs((phiMax_radm2 - 0.0) / dPhi_radm2)) * 2.0 + 1.0)
     startPhi_radm2 = - (nChanRM-1.0) * dPhi_radm2 / 2.0
     stopPhi_radm2 = + (nChanRM-1.0) * dPhi_radm2 / 2.0
     phiArr_radm2 = np.linspace(startPhi_radm2, stopPhi_radm2, nChanRM)
@@ -275,9 +275,33 @@ def run_rmsynth(data, polyOrd=3, phiMax_radm2=None, dPhi_radm2=None,
     mDict["fwhmRMSF"] = toscalar(fwhmRMSF)
     mDict["dQU_Jybm"] = toscalar(nanmedian(dQUArr_Jy))
     mDict["dFDFth_Jybm"] = toscalar(dFDFth_Jybm)
+    if mDict['phiPeakPIfit_rm2'] == None:
+        log('Peak is at edge of RM spectrum! Peak fitting failed!\n')
+        log('Rerunning with Phi_max twice as large.')
+        #The following code re-runs everything with higher phiMax, 
+        #Then overwrite the appropriate variables so as to continue on without
+        #interuption.
+        mDict, aDict = run_rmsynth(data           = data,
+                polyOrd        = polyOrd,
+                phiMax_radm2   = phiMax_radm2*2,
+                dPhi_radm2     = dPhi_radm2,
+                nSamples       = nSamples,
+                weightType     = weightType,
+                fitRMSF        = fitRMSF,
+                noStokesI      = noStokesI,
+                nBits          = nBits,
+                showPlots      = False,
+                debug          = debug,
+                verbose        = verbose)
+        phiArr_radm2=aDict["phiArr_radm2"]
+        phi2Arr_radm2=aDict["phi2Arr_radm2"]
+        RMSFArr=aDict["RMSFArr"]
+        freqArr_Hz=aDict["freqArr_Hz"]
+        weightArr=aDict["weightArr"]
+        dirtyFDF=aDict["dirtyFDF"]
 
-    
-    #pdb.set_trace()
+
+        
     # Measure the complexity of the q and u spectra
     mDict["fracPol"] = mDict["ampPeakPIfit_Jybm"]/(Ifreq0_mJybm/1e3)
     mD, pD = measure_qu_complexity(freqArr_Hz = freqArr_Hz,
