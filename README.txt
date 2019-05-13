@@ -1,3 +1,10 @@
+**Important: the actively developed RM-tools directory has moved.**
+RM-tools can now be found at https://github.com/CIRADA-Tools/RM
+Further development of RM-tools will take place in that repository, so all feature requests, bug reports, and other communication should be done there.
+This repository will no longer be updated, and represents the state of RM-tools development as of May 2019.
+
+
+
 #-----------------------------------------------------------------------------#
 #
 # Python scripts to perform RM-synthesis, RM-clean and QU-fitting on
@@ -12,9 +19,8 @@ RMtools_3D  ... 1D utilities to analyse Faraday spectral cubes.
 RMutils     ... Core functions used by the analysis utilities.
 
 
-IMPORTANT NOTE:
+NOTE:
 The master and develop branches of RM-tools are no longer being actively maintained.
-The cirada branch is the up-to-date, maintained and actively developed version of RM-tools.
 The cirada branch has been updated to Python 3; the master branch has been left for Python 2 compatability but will not receive updates except for critial bugs (at our discretion).
 
 Questions, bug reports, and feature requests can be sent to Cameron Van Eck, cameron.van.eck (at) dunlap.utoronto.ca.
